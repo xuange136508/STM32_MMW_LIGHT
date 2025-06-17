@@ -77,7 +77,7 @@ int main(void)
    DHT11_Data_t dht11_data;
    uint8_t dht11_success_count = 0;
 
-   for(int i = 0; i < 20; i++) {
+   for(int i = 0; i < 10; i++) {
        printf("=== 第 %d 次读取 ===\r\n", i+1);
        
        // 读取DHT11数据（单独进行，避免其他操作干扰时序）
@@ -89,9 +89,9 @@ int main(void)
            
            // 数据合理性检查
            if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
-               printf("  数据合理 \r\n");
+               printf("  温湿度数据合理 \r\n");
            } else {
-               printf("  数据可能异常！\r\n");
+               printf("  温湿度数据可能异常！\r\n");
            }
        } else {
            printf("  DHT11读取失败\r\n");
@@ -115,8 +115,8 @@ int main(void)
        HAL_Delay(2000); 
    }
    
-   printf("DHT11测试完成，成功率: %d/20 (%.1f%%)\r\n", 
-          dht11_success_count, (float)dht11_success_count/20*100);
+   printf("DHT11测试完成，成功率: %d/10 (%.1f%%)\r\n", 
+          dht11_success_count, (float)dht11_success_count/10*100);
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();

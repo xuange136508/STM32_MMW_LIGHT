@@ -104,31 +104,42 @@ uint8_t DHT11_Start(void)
 uint8_t DHT11_ReadByte(void)
 {
     uint8_t data = 0;
-    uint8_t retry;
-    
+    uint16_t time_high; // 记录高电平持续时间
+    uint8_t retry_low, retry_high;
+
     for(int i = 0; i < 8; i++) {
-        retry = 0;
-        
-        // 等待变为高电平
-        while(!DHT11_ReadPin() && retry < 100) {
-            retry++;
+        retry_low = 0;
+        // 等待变为低电平（前一个位的结束或本位的开始）
+        while(DHT11_ReadPin() && retry_low < 100) { // 等待引脚变为低电平
+            retry_low++;
             DHT11_DelayUs(1);
         }
-        
-        DHT11_DelayUs(40);  // 延时40us
-        
-        if(DHT11_ReadPin()) {
-            data |= (1 << (7-i));  // 如果还是高电平，则数据位为1
-        }
-        
-        retry = 0;
-        // 等待变为低电平
-        while(DHT11_ReadPin() && retry < 100) {
-            retry++;
+        if(retry_low >= 100) return 0xFF; // 超时错误处理
+
+        retry_low = 0;
+        // 等待变为高电平 (50us 低电平脉冲结束)
+        while(!DHT11_ReadPin() && retry_low < 100) { // 等待引脚变为高电平
+            retry_low++;
             DHT11_DelayUs(1);
         }
+        if(retry_low >= 100) return 0xFF; // 超时错误处理
+
+        time_high = 0;
+        // 计算高电平持续时间
+        while(DHT11_ReadPin() && time_high < 100) { // 持续高电平
+            time_high++;
+            DHT11_DelayUs(1);
+        }
+        if(time_high >= 100) return 0xFF; // 超时错误处理
+
+        // 根据高电平持续时间判断是0还是1
+        // 经验值：高电平持续时间在 26-28us 左右是0，在 70us 左右是1
+        // 这里的阈值需要根据实际测试微调，一般取中间值。
+        if(time_high > 45) { // 如果高电平持续时间大于某个阈值（例如45us），认为是1
+            data |= (1 << (7-i));
+        }
+        // 不需要 else，默认就是0
     }
-    
     return data;
 }
 
