@@ -73,38 +73,50 @@ int main(void)
   char msg[] = "UART初始化完成\r\n";
   HAL_UART_Transmit(&huart1, (uint8_t *)msg, 25, HAL_MAX_DELAY);
   
-  printf("系统启动，开始DHT11温湿度传感器测试...\r\n");
-  
   // DHT11读取测试
-  DHT11_Data_t dht11_data;
-  
-  for(int i = 0; i < 50; i++) {
-        uint16_t adc_value = Get_ADC_Value();
-        float voltage = (adc_value * 3.3f) / 4095.0f;
-        printf("ADC测试 %d - ADC Value: %hu (Voltage: %.2f V)\r\n", i+1, adc_value, voltage);
+   DHT11_Data_t dht11_data;
+   uint8_t dht11_success_count = 0;
 
-      // 读取PA8状态（GPIO_PIN_SET或GPIO_PIN_RESET）
-        GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
-        if (state == GPIO_PIN_SET) {
-            printf("振动检测: 触发!\r\n");  
-        } else {
-            printf("振动检测: 无信号\r\n");
-        }
+   for(int i = 0; i < 20; i++) {
+       printf("=== 第 %d 次读取 ===\r\n", i+1);
+       
+       // 读取DHT11数据（单独进行，避免其他操作干扰时序）
+       if(DHT11_ReadData(&dht11_data)) {
+           dht11_success_count++;
+           printf("  DHT11传感器读取成功:\r\n");
+           printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
+           printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
+           
+           // 数据合理性检查
+           if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
+               printf("  数据合理 \r\n");
+           } else {
+               printf("  数据可能异常！\r\n");
+           }
+       } else {
+           printf("  DHT11读取失败\r\n");
+       }
+       HAL_Delay(1000);  // 延时1秒后再测试其他传感器
+       
+       // ADC测试
+       uint16_t adc_value = Get_ADC_Value();
+       float voltage = (adc_value * 3.3f) / 4095.0f;
+       printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
 
-
-      // 读取DHT11数据
-      if(DHT11_ReadData(&dht11_data)) {
-          printf("DHT11读取成功 %d:\r\n", i+1);
-          printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
-          printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
-          printf("  校验和: 0x%02X\r\n\r\n", dht11_data.checksum);
-      } else {
-          printf("DHT11读取失败 %d\r\n", i+1);
-      }
-      
-      // DHT11建议读取间隔至少2秒
-      HAL_Delay(2000);
-  }
+       // 振动检测
+       GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+       printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "正常");
+       
+       printf("  成功率: %d/%d (%.1f%%)\r\n\r\n", 
+              dht11_success_count, i+1, 
+              (float)dht11_success_count/(i+1)*100);
+       
+       // DHT11需要至少2秒间隔，使用3秒更保险
+       HAL_Delay(2000); 
+   }
+   
+   printf("DHT11测试完成，成功率: %d/20 (%.1f%%)\r\n", 
+          dht11_success_count, (float)dht11_success_count/20*100);
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
