@@ -5,6 +5,7 @@
 #include "gpio.h"
 
 #include "adc.h"
+#include "dht11.h"
 //#include "cpp_func.h"
 #include <stdio.h>
 
@@ -63,16 +64,46 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
+  // 启用DWT循环计数器（用于微秒延时）
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
   // 初始化完成后立即测试串口
   char msg[] = "UART初始化完成\r\n";
   HAL_UART_Transmit(&huart1, (uint8_t *)msg, 25, HAL_MAX_DELAY);
   
-  // 简单的ADC测试（在FreeRTOS启动前）
-  for(int i = 0; i < 100; i++) {
-      uint16_t adc_value = Get_ADC_Value();
-      float voltage = (adc_value * 3.3f) / 4095.0f;
-      printf("启动测试 %d - ADC Value: %hu (Voltage: %.2f V)\r\n", i+1, adc_value, voltage);
-      HAL_Delay(500);
+  printf("系统启动，开始DHT11温湿度传感器测试...\r\n");
+  
+  // DHT11读取测试
+  DHT11_Data_t dht11_data;
+  
+  for(int i = 0; i < 50; i++) {
+        uint16_t adc_value = Get_ADC_Value();
+        float voltage = (adc_value * 3.3f) / 4095.0f;
+        printf("ADC测试 %d - ADC Value: %hu (Voltage: %.2f V)\r\n", i+1, adc_value, voltage);
+
+      // 读取PA8状态（GPIO_PIN_SET或GPIO_PIN_RESET）
+        GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+        if (state == GPIO_PIN_SET) {
+            printf("振动检测: 触发!\r\n");  
+        } else {
+            printf("振动检测: 无信号\r\n");
+        }
+
+
+      // 读取DHT11数据
+      if(DHT11_ReadData(&dht11_data)) {
+          printf("DHT11读取成功 %d:\r\n", i+1);
+          printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
+          printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
+          printf("  校验和: 0x%02X\r\n\r\n", dht11_data.checksum);
+      } else {
+          printf("DHT11读取失败 %d\r\n", i+1);
+      }
+      
+      // DHT11建议读取间隔至少2秒
+      HAL_Delay(2000);
   }
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

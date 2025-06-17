@@ -51,4 +51,5 @@ stm32_mmw_light\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event
 stm32_mmw_light\main.o: ../Core/Inc/adc.h
 stm32_mmw_light\main.o: ../Core/Inc/usart.h
 stm32_mmw_light\main.o: ../Core/Inc/gpio.h
+stm32_mmw_light\main.o: ../Core/Inc/dht11.h
 stm32_mmw_light\main.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\stdio.h

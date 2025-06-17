@@ -9,6 +9,7 @@
 "stm32_mmw_light\stm32f4xx_it.o"
 "stm32_mmw_light\stm32f4xx_hal_msp.o"
 "stm32_mmw_light\stm32f4xx_hal_timebase_tim.o"
+"stm32_mmw_light\dht11.o"
 "stm32_mmw_light\stm32f4xx_hal_tim.o"
 "stm32_mmw_light\stm32f4xx_hal_tim_ex.o"
 "stm32_mmw_light\stm32f4xx_hal_adc.o"
