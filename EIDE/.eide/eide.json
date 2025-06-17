@@ -47,6 +47,15 @@
                   },
                   {
                     "path": "../Core/Src/stm32f4xx_hal_timebase_tim.c"
+                  },
+                  {
+                    "path": "../Core/Src/cpp_func.cpp"
+                  },
+                  {
+                    "path": "../Core/Inc/cpp_func.h"
+                  },
+                  {
+                    "path": "../Core/Src/adc.c"
                   }
                 ],
                 "folders": []
@@ -114,6 +123,12 @@
               },
               {
                 "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c"
+              },
+              {
+                "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c"
+              },
+              {
+                "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c"
               }
             ],
             "folders": []
@@ -221,14 +236,32 @@
         "bin": "",
         "baseAddr": "",
         "cpuInfo": {
-          "vendor": "null",
-          "cpuName": "null"
+          "vendor": "ST",
+          "cpuName": "STM32F407VE"
         },
         "proType": 1,
         "speed": 8000,
         "otherCmds": ""
       },
-      "uploadConfigMap": {},
+      "uploadConfigMap": {
+        "JLink": {
+          "bin": "",
+          "baseAddr": "",
+          "cpuInfo": {
+            "vendor": "ST",
+            "cpuName": "STM32F407VE"
+          },
+          "proType": 1,
+          "speed": 8000,
+          "otherCmds": ""
+        },
+        "OpenOCD": {
+          "bin": "",
+          "target": "stm32f1x",
+          "interface": "stlink",
+          "baseAddr": "0x08000000"
+        }
+      },
       "custom_dep": {
         "name": "default",
         "incList": [
@@ -256,7 +289,7 @@
           "beforeBuildTasks": [],
           "afterBuildTasks": [],
           "global": {
-            "use-microLIB": false,
+            "use-microLIB": true,
             "output-debug-info": "enable"
           },
           "c/cpp-compiler": {
@@ -270,7 +303,6 @@
           "asm-compiler": {},
           "linker": {
             "output-format": "elf",
-            "xo-base": "",
             "ro-base": "0x08000000",
             "rw-base": "0x20000000"
           }

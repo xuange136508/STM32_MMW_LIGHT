@@ -1,14 +1,19 @@
 --cpu=Cortex-M4.fp
 "stm32_mmw_light\startup_stm32f407xx.o"
+"stm32_mmw_light\cpp_func.o"
 "stm32_mmw_light\main.o"
 "stm32_mmw_light\gpio.o"
 "stm32_mmw_light\freertos.o"
+"stm32_mmw_light\adc.o"
 "stm32_mmw_light\usart.o"
 "stm32_mmw_light\stm32f4xx_it.o"
 "stm32_mmw_light\stm32f4xx_hal_msp.o"
 "stm32_mmw_light\stm32f4xx_hal_timebase_tim.o"
 "stm32_mmw_light\stm32f4xx_hal_tim.o"
 "stm32_mmw_light\stm32f4xx_hal_tim_ex.o"
+"stm32_mmw_light\stm32f4xx_hal_adc.o"
+"stm32_mmw_light\stm32f4xx_hal_adc_ex.o"
+"stm32_mmw_light\stm32f4xx_ll_adc.o"
 "stm32_mmw_light\stm32f4xx_hal_rcc.o"
 "stm32_mmw_light\stm32f4xx_hal_rcc_ex.o"
 "stm32_mmw_light\stm32f4xx_hal_flash.o"
@@ -34,7 +39,7 @@
 "stm32_mmw_light\cmsis_os.o"
 "stm32_mmw_light\heap_4.o"
 "stm32_mmw_light\port.o"
---strict --scatter "STM32_MMW_LIGHT\STM32_MMW_LIGHT.sct"
+--library_type=microlib --strict --scatter "STM32_MMW_LIGHT\STM32_MMW_LIGHT.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "STM32_MMW_LIGHT.map" -o STM32_MMW_LIGHT\STM32_MMW_LIGHT.axf
