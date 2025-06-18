@@ -56,6 +56,30 @@
                   },
                   {
                     "path": "../Core/Src/adc.c"
+                  },
+                  {
+                    "path": "../Core/Src/CST816.c"
+                  },
+                  {
+                    "path": "../Core/Src/iic_hal_hard.c"
+                  },
+                  {
+                    "path": "../Core/Src/lcd.c"
+                  },
+                  {
+                    "path": "../Core/Src/lcd_init.c"
+                  },
+                  {
+                    "path": "../Core/Src/spi.c"
+                  },
+                  {
+                    "path": "../Core/Src/delay.c"
+                  },
+                  {
+                    "path": "../Core/Src/dht11.c"
+                  },
+                  {
+                    "path": "../Core/Src/i2c.c"
                   }
                 ],
                 "folders": []
@@ -129,6 +153,15 @@
               },
               {
                 "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c"
+              },
+              {
+                "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c"
+              },
+              {
+                "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c"
+              },
+              {
+                "path": "../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c"
               }
             ],
             "folders": []

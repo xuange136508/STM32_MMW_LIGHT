@@ -6,8 +6,15 @@
 
 #include "adc.h"
 #include "dht11.h"
-//#include "cpp_func.h"
+#include "spi.h"
+#include "i2c.h"
+
 #include <stdio.h>
+
+#include "CST816.h"
+#include "lcd.h"
+
+//#include "cpp_func.h"
 
 
 // 重定向 printf 到 UART
@@ -62,7 +69,13 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
-  /* USER CODE BEGIN 2 */
+  MX_SPI1_Init();
+  MX_I2C1_Init();
+	
+	// 初始化LCD
+	CST816_GPIO_Init();
+	LCD_DrawLine(10, 20, 100, 80, 0xF800);
+	
 
   // 启用DWT循环计数器（用于微秒延时）
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
