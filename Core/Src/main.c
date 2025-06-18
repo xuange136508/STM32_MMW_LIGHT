@@ -72,6 +72,7 @@ int main(void)
   MX_SPI1_Init();
   MX_I2C1_Init();
 	
+  
 	// 初始化LCD
 	CST816_GPIO_Init();
 	LCD_DrawLine(10, 20, 100, 80, 0xF800);
@@ -119,7 +120,6 @@ int main(void)
        // 振动检测
        GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
        printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
-       
        
        // DHT11需要至少2秒间隔，使用3秒更保险
        HAL_Delay(2000); 
