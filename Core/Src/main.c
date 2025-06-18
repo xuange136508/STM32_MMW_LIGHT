@@ -105,11 +105,8 @@ int main(void)
 
        // 振动检测
        GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
-       printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "正常");
+       printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
        
-       printf("  成功率: %d/%d (%.1f%%)\r\n\r\n", 
-              dht11_success_count, i+1, 
-              (float)dht11_success_count/(i+1)*100);
        
        // DHT11需要至少2秒间隔，使用3秒更保险
        HAL_Delay(2000); 
