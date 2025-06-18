@@ -3,6 +3,9 @@
  
 #include "stdint.h"
 #include "main.h"
+
+// 定义是否使用软件I2C，0表示使用硬件I2C
+#define IICSOFT 0
  
 #if IICSOFT
 #include "iic_hal.h"

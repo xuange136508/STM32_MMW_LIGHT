@@ -408,6 +408,31 @@
               <FilePath>..\Core\Src\dht11.c</FilePath>
             </File>
             <File>
+              <FileName>CST816.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\CST816.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>iic_hal_hard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\iic_hal_hard.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\lcd_init.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -456,31 +481,6 @@
               <FileName>stm32f4xx_hal_timebase_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_timebase_tim.c</FilePath>
-            </File>
-            <File>
-              <FileName>CST816.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\CST816.c</FilePath>
-            </File>
-            <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>iic_hal_hard.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\iic_hal_hard.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\lcd.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_init.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\lcd_init.c</FilePath>
             </File>
           </Files>
         </Group>

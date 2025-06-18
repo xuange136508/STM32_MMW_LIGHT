@@ -13,6 +13,7 @@
 
 #include "CST816.h"
 #include "lcd.h"
+#include "lcd_init.h"
 
 //#include "cpp_func.h"
 
@@ -71,11 +72,21 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
+
+  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 	
+  // LCD初始化
+  LCD_Init();
+  printf("LCD初始化完成\r\n");
   
-	// 初始化LCD
-	CST816_GPIO_Init();
-	LCD_DrawLine(10, 20, 100, 80, 0xF800);
+  // 填充为蓝色
+  LCD_Fill(0, 0, 239, 279, BLUE);
+  printf("蓝色填充完成\r\n");
+  HAL_Delay(1000);
+  
+  // 初始化触摸屏
+  CST816_GPIO_Init();
+  printf("触摸屏初始化完成\r\n");
 	
 
   // 启用DWT循环计数器（用于微秒延时）

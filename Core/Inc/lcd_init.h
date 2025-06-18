@@ -25,17 +25,17 @@
 
 //-----------------LCD端口定义---------------- 
 
-#define LCD_RES_Clr()  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET)  // RES
-#define LCD_RES_Set()  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET)
+#define LCD_RES_Clr()  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_RESET)  // RES
+#define LCD_RES_Set()  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET)
 
-#define LCD_DC_Clr()   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET)  // DC
-#define LCD_DC_Set()   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET)
+#define LCD_DC_Clr()   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET)  // DC
+#define LCD_DC_Set()   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET)
  		     
-#define LCD_CS_Clr()   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET)  // CS
-#define LCD_CS_Set()   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET)
+#define LCD_CS_Clr()   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET)  // CS
+#define LCD_CS_Set()   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET)
 
-#define LCD_BLK_Clr()  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET)  // BLK
-#define LCD_BLK_Set()  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET)
+#define LCD_BLK_Clr()  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET)  // BLK
+#define LCD_BLK_Set()  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET)
 
 void LCD_GPIO_Init(void);//初始化GPIO
 void LCD_Writ_Bus(uint8_t dat);//模拟SPI时序

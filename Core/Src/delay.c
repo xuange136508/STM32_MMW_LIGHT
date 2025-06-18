@@ -6,27 +6,33 @@
 static uint8_t us=0;
 static uint16_t ms=0;
 
-//粗延时函数，微秒
+// 绠�鍗曠殑姣寤舵椂鍑芥暟
+void delay_ms(uint32_t ms)
+{
+    HAL_Delay(ms);
+}
+
+// 寰寤舵椂鍑芥暟
+void delay_us(uint32_t us)
+{
+    uint32_t start = DWT->CYCCNT;
+    uint32_t cycles = us * (SystemCoreClock / 1000000);
+    while ((DWT->CYCCNT - start) < cycles);
+}
+
+// 寰寤舵椂鍑芥暟
 void Rough_DelayUs(uint16_t Time)
-{    
-   uint16_t i=0;  
-   while(Time--)
-   {
-      i=10;  //自己定义
-      while(i--) ;    
-   }
+{
+    delay_us(Time);
 }
-//粗毫秒级的延时
+
+// 姣寤舵椂鍑芥暟
 void Rough_DelayMs(uint16_t Time)
-{    
-   uint16_t i=0;  
-   while(Time--)
-   {
-      i=12000;  //自己定义
-      while(i--) ;    
-   }
+{
+    delay_ms(Time);
 }
-//精确延时初始化
+
+// 浣跨敤HAL搴撶殑SysTick锛岃繖閲屼笉闇�瑕侀澶栧垵濮嬪寲
 void SysTick_Init(uint8_t SysClk)
 {
 	//SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
@@ -34,38 +40,15 @@ void SysTick_Init(uint8_t SysClk)
 	us=SysClk/8;
 	ms=us*1000;
 }
-//精确延时函数，微秒
+
+// 寰寤舵椂鍑芥暟
 void Correct_DelayUs(uint32_t Time)
 {
-	uint32_t temp;	    	 
-	SysTick->LOAD=Time*us; 					//时间加载	  		 
-	SysTick->VAL=0x00;        					//清空计数器
-	SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk ;	//开始倒数	  
-	do
-	{
-		temp=SysTick->CTRL;
-	}while((temp&0x01)&&!(temp&(1<<16)));		//等待时间到达   
-	SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk;	//关闭计数器
-	SysTick->VAL =0X00;      					 //清空计数器	 
+    delay_us(Time);
 }
-//精确毫秒级的延时
+
+// 姣寤舵椂鍑芥暟
 void Correct_DelayMs(uint16_t Time)
 {
-	uint32_t temp;		   
-	SysTick->LOAD=(u32)Time*ms;				//时间加载(SysTick->LOAD为24bit)
-	SysTick->VAL =0x00;							//清空计数器
-	SysTick->CTRL|=SysTick_CTRL_ENABLE_Msk ;	//开始倒数  
-	do
-	{
-		temp=SysTick->CTRL;
-	}while((temp&0x01)&&!(temp&(1<<16)));		//等待时间到达   
-	SysTick->CTRL&=~SysTick_CTRL_ENABLE_Msk;	//关闭计数器
-	SysTick->VAL =0X00;       					//清空计数器	  
-}
-
-
-
-// 修改： 直接调用HAL库
-void delay_ms(uint32_t ms) {
-    HAL_Delay(ms);
+    delay_ms(Time);
 }

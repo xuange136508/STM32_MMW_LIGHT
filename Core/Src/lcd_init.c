@@ -128,7 +128,7 @@ void LCD_Address_Set(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 
 void LCD_Init(void)
 {
-	LCD_GPIO_Init();//初始化GPIO
+	// LCD_GPIO_Init();//初始化GPIO
 	
 	LCD_RES_Clr();//复位
 	delay_ms(100);
@@ -136,7 +136,7 @@ void LCD_Init(void)
 	delay_ms(100);
 	
 	LCD_BLK_Set();//打开背光
-  delay_ms(100);
+  	delay_ms(100);
 	
 	//************* Start Initial Sequence **********//
 	LCD_WR_REG(0x11); //Sleep out 
