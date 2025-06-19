@@ -8,6 +8,7 @@
 #include "dht11.h"
 #include "spi.h"
 #include "i2c.h"
+#include "tim.h"
 
 #include <stdio.h>
 
@@ -50,7 +51,7 @@ uint16_t Get_ADC_Value(void) {
 
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
-
+static void MX_NVIC_Init(void);
 
 
 /**
@@ -72,6 +73,9 @@ int main(void)
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
+
+  MX_TIM3_Init();
+  MX_NVIC_Init();
 
   // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 	
@@ -131,6 +135,10 @@ int main(void)
        // 振动检测
        GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
        printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
+
+       // 触摸感应检测
+       GPIO_PinState state1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+       printf("  触摸: %s\r\n", (state1 == GPIO_PIN_SET) ? "触发" : "未触发");
        
        // DHT11需要至少2秒间隔，使用3秒更保险
        HAL_Delay(2000); 
@@ -197,9 +205,18 @@ void SystemClock_Config(void)
   }
 }
 
-/* USER CODE BEGIN 4 */
 
-/* USER CODE END 4 */
+/**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void)
+{
+  /* TIM3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(TIM3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+}
+
 
 /**
   * @brief  Period elapsed callback in non blocking mode

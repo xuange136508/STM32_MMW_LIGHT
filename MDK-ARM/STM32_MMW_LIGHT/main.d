@@ -57,6 +57,7 @@ stm32_mmw_light\main.o: ../Core/Inc/gpio.h
 stm32_mmw_light\main.o: ../Core/Inc/dht11.h
 stm32_mmw_light\main.o: ../Core/Inc/spi.h
 stm32_mmw_light\main.o: ../Core/Inc/i2c.h
+stm32_mmw_light\main.o: ../Core/Inc/tim.h
 stm32_mmw_light\main.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\stdio.h
 stm32_mmw_light\main.o: ../Core/Inc/CST816.h
 stm32_mmw_light\main.o: ../Core/Inc/iic_hal_hard.h

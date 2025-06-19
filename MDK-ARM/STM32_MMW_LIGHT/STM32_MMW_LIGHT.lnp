@@ -13,6 +13,7 @@
 "stm32_mmw_light\adc.o"
 "stm32_mmw_light\i2c.o"
 "stm32_mmw_light\spi.o"
+"stm32_mmw_light\tim.o"
 "stm32_mmw_light\usart.o"
 "stm32_mmw_light\stm32f4xx_it.o"
 "stm32_mmw_light\stm32f4xx_hal_msp.o"
