@@ -75,26 +75,24 @@ int main(void)
   MX_SPI1_Init();
   MX_I2C1_Init();
 
+// 添加计时器的初始化
   MX_TIM3_Init();
-  MX_TIM4_Init();  // 添加TIM4初始化
+  MX_TIM4_Init();  
   MX_NVIC_Init();
 
- // RGB LED测试
-  RGB_LED_Test();
+  // 测试PD12的PWM呼吸灯
+  // HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  // printf("PWM呼吸灯启动完成\r\n");
 
-  // 启动PD12的PWM呼吸灯
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-  printf("PWM呼吸灯启动完成\r\n");
-	
-  // LCD初始化
+  // RGB LED测试
+  // RGB_LED_Test();
+
+  // LCD屏幕初始化
   LCD_Init();
   printf("LCD初始化完成\r\n");
-  
   // 填充为蓝色
   LCD_Fill(0, 0, 239, 279, BLUE);
-  printf("蓝色填充完成\r\n");
   HAL_Delay(1000);
-  
   // 初始化触摸屏
   CST816_GPIO_Init();
   printf("触摸屏初始化完成\r\n");
@@ -105,7 +103,6 @@ int main(void)
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 
-  // 初始化完成后立即测试串口
   char msg[] = "UART初始化完成\r\n";
   HAL_UART_Transmit(&huart1, (uint8_t *)msg, 25, HAL_MAX_DELAY);
   
@@ -113,7 +110,7 @@ int main(void)
    DHT11_Data_t dht11_data;
    uint8_t dht11_success_count = 0;
 
-   for(int i = 0; i < 10; i++) {
+   for(int i = 0; i < 5; i++) {
        printf("=== 第 %d 次读取 ===\r\n", i+1);
        
        // 读取DHT11数据（单独进行，避免其他操作干扰时序）
@@ -152,7 +149,7 @@ int main(void)
    }
    
    printf("DHT11测试完成，成功率: %d/10 (%.1f%%)\r\n", 
-          dht11_success_count, (float)dht11_success_count/10*100);
+          dht11_success_count, (float)dht11_success_count/5*100);
 
  
   /* Call init function for freertos objects (in cmsis_os2.c) */

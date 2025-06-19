@@ -257,7 +257,7 @@ void StartBreathingLedTask(void const * argument)
   
   // 呼吸灯参数
   float breath_phase = 0.0f;
-  const float breath_speed = 0.05f;  // 呼吸速度
+  const float breath_speed = 0.08f;  // 呼吸速度
   const uint32_t max_brightness = 800; // 最大亮度 (0-999)
   const uint32_t min_brightness = 10;  // 最小亮度
   
