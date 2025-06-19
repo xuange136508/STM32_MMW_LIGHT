@@ -26,7 +26,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "rgb_led.h"
+#include "tim.h"
 #include <stdio.h>
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +52,7 @@
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId rgbLedTaskHandle;
+osThreadId breathingLedTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -58,6 +61,7 @@ osThreadId rgbLedTaskHandle;
 
 void StartDefaultTask(void const * argument);
 void StartRgbLedTask(void const * argument);
+void StartBreathingLedTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -112,6 +116,10 @@ void MX_FREERTOS_Init(void) {
   /* Create RGB LED control task */
   osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
   rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  
+  /* Create Breathing LED task */
+  osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
+  breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -231,6 +239,45 @@ void StartRgbLedTask(void const * argument)
     }
     
     osDelay(100);  // Delay 100ms
+  }
+}
+
+#define M_PI 3.14159265358979323846f  // 单精度浮点版本
+/**
+  * @brief PD12 PWM呼吸灯任务
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartBreathingLedTask(void const * argument)
+{
+  printf("PWM Breathing LED task started\r\n");
+  
+  // 启动PWM
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  
+  // 呼吸灯参数
+  float breath_phase = 0.0f;
+  const float breath_speed = 0.05f;  // 呼吸速度
+  const uint32_t max_brightness = 800; // 最大亮度 (0-999)
+  const uint32_t min_brightness = 10;  // 最小亮度
+  
+  for(;;)
+  {
+    // 使用正弦波生成呼吸效果
+    float sine_value = (sin(breath_phase) + 1.0f) / 2.0f; // 0-1 范围
+    uint32_t pwm_value = min_brightness + (uint32_t)(sine_value * (max_brightness - min_brightness));
+    
+    // 设置PWM占空比
+    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, pwm_value);
+    
+    // 更新相位
+    breath_phase += breath_speed;
+    if (breath_phase >= 2.0f * M_PI) {
+      breath_phase = 0.0f;
+    }
+    
+    // 延时控制呼吸频率
+    osDelay(50);  // 50ms延时，可调节呼吸速度
   }
 }
 

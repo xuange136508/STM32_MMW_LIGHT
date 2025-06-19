@@ -76,13 +76,15 @@ int main(void)
   MX_I2C1_Init();
 
   MX_TIM3_Init();
+  MX_TIM4_Init();  // 添加TIM4初始化
   MX_NVIC_Init();
 
  // RGB LED测试
   RGB_LED_Test();
 
-  // PWM LED灯测试
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
+  // 启动PD12的PWM呼吸灯
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  printf("PWM呼吸灯启动完成\r\n");
 	
   // LCD初始化
   LCD_Init();

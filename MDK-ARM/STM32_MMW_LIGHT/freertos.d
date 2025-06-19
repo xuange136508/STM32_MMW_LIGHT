@@ -54,3 +54,4 @@ stm32_mmw_light\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/e
 stm32_mmw_light\freertos.o: ../Core/Inc/rgb_led.h
 stm32_mmw_light\freertos.o: ../Core/Inc/tim.h
 stm32_mmw_light\freertos.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\stdio.h
+stm32_mmw_light\freertos.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\math.h
