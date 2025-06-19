@@ -81,7 +81,8 @@ int main(void)
  // RGB LED≤‚ ‘
   RGB_LED_Test();
 
-  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+  // PWM LEDµ∆≤‚ ‘
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
 	
   // LCD≥ı ºªØ
   LCD_Init();
