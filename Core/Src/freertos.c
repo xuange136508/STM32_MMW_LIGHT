@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "rgb_led.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,6 +49,7 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
+osThreadId rgbLedTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -55,6 +57,7 @@ osThreadId defaultTaskHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
+void StartRgbLedTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -106,7 +109,9 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  /* Create RGB LED control task */
+  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -131,5 +136,102 @@ void StartDefaultTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+/**
+  * @brief RGB LED control task
+  * @param argument: Task argument
+  * @retval None
+  */
+void StartRgbLedTask(void const * argument)
+{
+  printf("RGB LED task started\r\n");
+  
+  // Initialize RGB LED
+  RGB_LED_Init();
+  
+  // Wait 2 seconds for system stability
+  osDelay(2000);
+  
+  // RGB LED mode cycle
+  RGB_Mode_t modes[] = {
+    RGB_MODE_STATIC_RED,
+    RGB_MODE_STATIC_GREEN,
+    RGB_MODE_STATIC_BLUE,
+    RGB_MODE_BLINK_RED,
+    RGB_MODE_BLINK_GREEN,
+    RGB_MODE_BLINK_BLUE,
+    RGB_MODE_BREATHING,
+    RGB_MODE_RAINBOW,
+    RGB_MODE_ALTERNATE
+  };
+  
+  const char* mode_names[] = {
+    "Static Red",
+    "Static Green",
+    "Static Blue",
+    "Blinking Red",
+    "Blinking Green",
+    "Blinking Blue",
+    "Breathing",
+    "Rainbow",
+    "Alternating"
+  };
+  
+  uint8_t mode_index = 0;
+  uint32_t last_switch_time = osKernelSysTick();
+  
+  for(;;)
+  {
+    // Switch mode every 5 seconds
+    if((osKernelSysTick() - last_switch_time) >= 5000)
+    {
+      printf("Switching RGB mode: %s\r\n", mode_names[mode_index]);
+      RGB_LED_SetMode(modes[mode_index]);
+      
+      // Set corresponding color for different modes
+      switch(modes[mode_index])
+      {
+        case RGB_MODE_STATIC_RED:
+        case RGB_MODE_BLINK_RED:
+          RGB_LED_SetColor(255, 0, 0);
+          RGB_LED_SetBrightness(80);
+          break;
+          
+        case RGB_MODE_STATIC_GREEN:
+        case RGB_MODE_BLINK_GREEN:
+          RGB_LED_SetColor(0, 255, 0);
+          RGB_LED_SetBrightness(60);
+          break;
+          
+        case RGB_MODE_STATIC_BLUE:
+        case RGB_MODE_BLINK_BLUE:
+          RGB_LED_SetColor(0, 0, 255);
+          RGB_LED_SetBrightness(70);
+          break;
+          
+        case RGB_MODE_BREATHING:
+          RGB_LED_SetColor(255, 255, 255);
+          break;
+          
+        case RGB_MODE_RAINBOW:
+          RGB_LED_SetBrightness(75);
+          break;
+          
+        case RGB_MODE_ALTERNATE:
+          RGB_LED_SetColor(255, 100, 0);  // Orange
+          RGB_LED_SetBrightness(90);
+          break;
+          
+        default:
+          break;
+      }
+      
+      mode_index = (mode_index + 1) % (sizeof(modes)/sizeof(modes[0]));
+      last_switch_time = osKernelSysTick();
+    }
+    
+    osDelay(100);  // Delay 100ms
+  }
+}
 
 /* USER CODE END Application */

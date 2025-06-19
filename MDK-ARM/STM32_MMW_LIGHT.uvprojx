@@ -538,6 +538,11 @@
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_timebase_tim.c</FilePath>
             </File>
+            <File>
+              <FileName>rgb_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\rgb_led.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

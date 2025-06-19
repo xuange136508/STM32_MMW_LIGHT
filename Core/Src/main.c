@@ -15,6 +15,7 @@
 #include "CST816.h"
 #include "lcd.h"
 #include "lcd_init.h"
+#include "rgb_led.h"
 
 //#include "cpp_func.h"
 
@@ -76,6 +77,9 @@ int main(void)
 
   MX_TIM3_Init();
   MX_NVIC_Init();
+
+ // RGB LED测试
+  RGB_LED_Test();
 
   // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 	
@@ -147,6 +151,7 @@ int main(void)
    printf("DHT11测试完成，成功率: %d/10 (%.1f%%)\r\n", 
           dht11_success_count, (float)dht11_success_count/10*100);
 
+ 
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
 
@@ -218,27 +223,7 @@ static void MX_NVIC_Init(void)
 }
 
 
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1)
-  {
-    HAL_IncTick();
-  }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
-}
+// TIM中断回调函数已移至rgb_led.c中实现
 
 /**
   * @brief  This function is executed in case of error occurrence.

@@ -51,3 +51,6 @@ stm32_mmw_light\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/t
 stm32_mmw_light\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
 stm32_mmw_light\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
 stm32_mmw_light\freertos.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
+stm32_mmw_light\freertos.o: ../Core/Inc/rgb_led.h
+stm32_mmw_light\freertos.o: ../Core/Inc/tim.h
+stm32_mmw_light\freertos.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\stdio.h
