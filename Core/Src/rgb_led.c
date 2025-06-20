@@ -278,6 +278,13 @@ void RGB_LED_Test(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM3) {
+        // 添加调试信息（仅在开始几次打印）
+        static uint32_t debug_count = 0;
+        if (debug_count < 5) {
+            printf("TIM3 interrupt triggered - count: %lu\r\n", debug_count);
+            debug_count++;
+        }
+        
         // Update RGB LED
         RGB_LED_Update();
     }

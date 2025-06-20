@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "spi.h": "c"
+        "spi.h": "c",
+        "ws2812b.h": "c",
+        "tim.h": "c",
+        "main.h": "c",
+        "rgb_led.h": "c"
     }
 }

@@ -16,7 +16,6 @@
 #include "lcd.h"
 #include "lcd_init.h"
 #include "rgb_led.h"
-
 //#include "cpp_func.h"
 
 
@@ -52,7 +51,6 @@ uint16_t Get_ADC_Value(void) {
 
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
-static void MX_NVIC_Init(void);
 
 
 /**
@@ -78,14 +76,14 @@ int main(void)
 // 添加计时器的初始化
   MX_TIM3_Init();
   MX_TIM4_Init();  
-  MX_NVIC_Init();
 
   // 测试PD12的PWM呼吸灯
   // HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   // printf("PWM呼吸灯启动完成\r\n");
 
   // RGB LED测试
-  // RGB_LED_Test();
+  RGB_LED_Test();
+  
 
   // LCD屏幕初始化
   LCD_Init();
@@ -148,7 +146,7 @@ int main(void)
        HAL_Delay(2000); 
    }
    
-   printf("DHT11测试完成，成功率: %d/10 (%.1f%%)\r\n", 
+   printf("DHT11测试完成，成功率: %d/5 (%.1f%%)\r\n", 
           dht11_success_count, (float)dht11_success_count/5*100);
 
  
@@ -210,20 +208,6 @@ void SystemClock_Config(void)
   }
 }
 
-
-/**
-  * @brief NVIC Configuration.
-  * @retval None
-  */
-static void MX_NVIC_Init(void)
-{
-  /* TIM3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(TIM3_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(TIM3_IRQn);
-}
-
-
-// TIM中断回调函数已移至rgb_led.c中实现
 
 /**
   * @brief  This function is executed in case of error occurrence.

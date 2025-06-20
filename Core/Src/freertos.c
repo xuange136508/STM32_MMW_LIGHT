@@ -191,7 +191,7 @@ void StartRgbLedTask(void const * argument)
   for(;;)
   {
     // Switch mode every 5 seconds
-    if((osKernelSysTick() - last_switch_time) >= 5000)
+    if((osKernelSysTick() - last_switch_time) >= 2000)
     {
       printf("Switching RGB mode: %s\r\n", mode_names[mode_index]);
       RGB_LED_SetMode(modes[mode_index]);
