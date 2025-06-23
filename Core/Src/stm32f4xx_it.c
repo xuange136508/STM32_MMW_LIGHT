@@ -190,18 +190,10 @@ void TIM4_IRQHandler(void)
   /* USER CODE END TIM4_IRQn 1 */
 }
 
-/* 在 stm32f4xx_it.c 文件中找到 DMA1_Stream1_IRQHandler */
-// 确认您的TIM4_CH2对应的DMA通道是DMA1 Stream1 Channel2
 void DMA1_Stream3_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
-
-  /* USER CODE END DMA1_Stream1_IRQn 0 */
   // 这是 HAL 库的通用DMA中断处理函数，它会检查中断源并调用回调函数
   HAL_DMA_IRQHandler(&hdma_tim4_ch2); // 使用正确的DMA句柄
-  /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream1_IRQn 1 */
 }
 
 /**

@@ -296,6 +296,15 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
     }
 }
 
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    // Keep original TIM1 callback
+    if (htim->Instance == TIM1) {
+        HAL_IncTick();
+    }
+} 
+
 /**
  * @brief DMA中断处理函数
  */

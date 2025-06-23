@@ -50,6 +50,7 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
+osThreadId rgbLedTaskHandle;
 osThreadId breathingLedTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,6 +59,7 @@ osThreadId breathingLedTaskHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
+void StartRgbLedTask(void const * argument);
 void StartBreathingLedTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -111,8 +113,8 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* Create RGB LED control task */
-  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
   /* Create Breathing LED task */
   osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
@@ -142,6 +144,15 @@ void StartDefaultTask(void const * argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
+ /**
+  * @brief RGB LED control task
+  * @param argument: Task argument
+  * @retval None
+  */
+void StartRgbLedTask(void const * argument)
+{
+
+}
 
 #define M_PI 3.14f  // 单精度浮点版本
 /**
