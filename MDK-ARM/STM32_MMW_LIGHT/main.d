@@ -65,3 +65,4 @@ stm32_mmw_light\main.o: ../Core/Inc/delay.h
 stm32_mmw_light\main.o: ../Core/Inc/lcd.h
 stm32_mmw_light\main.o: ../Core/Inc/lcd_init.h
 stm32_mmw_light\main.o: ../Core/Inc/rgb_led.h
+stm32_mmw_light\main.o: ../Core/Inc/ws2812b_driver.h

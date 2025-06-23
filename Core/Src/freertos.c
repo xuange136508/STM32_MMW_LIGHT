@@ -25,7 +25,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "rgb_led.h"
 #include "tim.h"
 #include <stdio.h>
 #include <math.h>
@@ -51,7 +50,6 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
-osThreadId rgbLedTaskHandle;
 osThreadId breathingLedTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,7 +58,6 @@ osThreadId breathingLedTaskHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
-void StartRgbLedTask(void const * argument);
 void StartBreathingLedTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -114,8 +111,8 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* Create RGB LED control task */
-  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
   /* Create Breathing LED task */
   osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
@@ -145,104 +142,8 @@ void StartDefaultTask(void const * argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
-/**
-  * @brief RGB LED control task
-  * @param argument: Task argument
-  * @retval None
-  */
-void StartRgbLedTask(void const * argument)
-{
-  printf("RGB LED task started\r\n");
-  
-  // Initialize RGB LED
-  RGB_LED_Init();
-  
-  // Wait 2 seconds for system stability
-  osDelay(2000);
-  
-  // RGB LED mode cycle
-  RGB_Mode_t modes[] = {
-    RGB_MODE_STATIC_RED,
-    RGB_MODE_STATIC_GREEN,
-    RGB_MODE_STATIC_BLUE,
-    RGB_MODE_BLINK_RED,
-    RGB_MODE_BLINK_GREEN,
-    RGB_MODE_BLINK_BLUE,
-    RGB_MODE_BREATHING,
-    RGB_MODE_RAINBOW,
-    RGB_MODE_ALTERNATE
-  };
-  
-  const char* mode_names[] = {
-    "Static Red",
-    "Static Green",
-    "Static Blue",
-    "Blinking Red",
-    "Blinking Green",
-    "Blinking Blue",
-    "Breathing",
-    "Rainbow",
-    "Alternating"
-  };
-  
-  uint8_t mode_index = 0;
-  uint32_t last_switch_time = osKernelSysTick();
-  
-  for(;;)
-  {
-    // Switch mode every 5 seconds
-    if((osKernelSysTick() - last_switch_time) >= 2000)
-    {
-      printf("Switching RGB mode: %s\r\n", mode_names[mode_index]);
-      RGB_LED_SetMode(modes[mode_index]);
-      
-      // Set corresponding color for different modes
-      switch(modes[mode_index])
-      {
-        case RGB_MODE_STATIC_RED:
-        case RGB_MODE_BLINK_RED:
-          RGB_LED_SetColor(255, 0, 0);
-          RGB_LED_SetBrightness(80);
-          break;
-          
-        case RGB_MODE_STATIC_GREEN:
-        case RGB_MODE_BLINK_GREEN:
-          RGB_LED_SetColor(0, 255, 0);
-          RGB_LED_SetBrightness(60);
-          break;
-          
-        case RGB_MODE_STATIC_BLUE:
-        case RGB_MODE_BLINK_BLUE:
-          RGB_LED_SetColor(0, 0, 255);
-          RGB_LED_SetBrightness(70);
-          break;
-          
-        case RGB_MODE_BREATHING:
-          RGB_LED_SetColor(255, 255, 255);
-          break;
-          
-        case RGB_MODE_RAINBOW:
-          RGB_LED_SetBrightness(75);
-          break;
-          
-        case RGB_MODE_ALTERNATE:
-          RGB_LED_SetColor(255, 100, 0);  // Orange
-          RGB_LED_SetBrightness(90);
-          break;
-          
-        default:
-          break;
-      }
-      
-      mode_index = (mode_index + 1) % (sizeof(modes)/sizeof(modes[0]));
-      last_switch_time = osKernelSysTick();
-    }
-    
-    osDelay(100);  // Delay 100ms
-  }
-}
 
-#define M_PI 3.14159265358979323846f  // 单精度浮点版本
+#define M_PI 3.14f  // 单精度浮点版本
 /**
   * @brief PD12 PWM呼吸灯任务
   * @param argument: 任务参数
@@ -257,8 +158,8 @@ void StartBreathingLedTask(void const * argument)
   
   // 呼吸灯参数
   float breath_phase = 0.0f;
-  const float breath_speed = 0.08f;  // 呼吸速度
-  const uint32_t max_brightness = 800; // 最大亮度 (0-999)
+  const float breath_speed = 0.12f;  // 呼吸速度
+  const uint32_t max_brightness = 50; // 最大亮度 (0-999)
   const uint32_t min_brightness = 10;  // 最小亮度
   
   for(;;)

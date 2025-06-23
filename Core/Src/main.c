@@ -15,8 +15,8 @@
 #include "CST816.h"
 #include "lcd.h"
 #include "lcd_init.h"
-#include "rgb_led.h"
-//#include "cpp_func.h"
+#include "ws2812b.h"
+
 
 
 // 重定向 printf 到 UART
@@ -53,6 +53,7 @@ void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 
 
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -74,26 +75,63 @@ int main(void)
   MX_I2C1_Init();
 
 // 添加计时器的初始化
-  MX_TIM3_Init();
   MX_TIM4_Init();  
+
 
   // 测试PD12的PWM呼吸灯
   // HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   // printf("PWM呼吸灯启动完成\r\n");
 
   // RGB LED测试
-  RGB_LED_Test();
-  
+  // RGB_LED_Test();
 
-  // LCD屏幕初始化
-  LCD_Init();
-  printf("LCD初始化完成\r\n");
-  // 填充为蓝色
-  LCD_Fill(0, 0, 239, 279, BLUE);
-  HAL_Delay(1000);
-  // 初始化触摸屏
-  CST816_GPIO_Init();
-  printf("触摸屏初始化完成\r\n");
+  // // LCD屏幕初始化
+  // LCD_Init();
+  // printf("LCD初始化完成\r\n");
+  // // 填充为蓝色
+  // LCD_Fill(0, 0, 239, 279, BLUE);
+  // HAL_Delay(1000);
+  // // 初始化触摸屏
+  // CST816_GPIO_Init();
+  // printf("触摸屏初始化完成\r\n");
+
+
+  // 初始化WS2812B RGB彩灯
+  WS2812B_Init();
+  
+  // 基础颜色测试
+  printf("设置LED颜色: LED0=红色, LED1=绿色\r\n");
+  WS2812B_SetColorEnum(0, WS2812B_RED);
+  WS2812B_SetColorEnum(1, WS2812B_GREEN);
+  WS2812B_Update();
+  HAL_Delay(2000);
+  
+  // 测试多种颜色
+  printf("开始颜色循环测试...\r\n");
+  WS2812B_ColorEnum_t test_colors[] = {
+    WS2812B_RED, WS2812B_GREEN, WS2812B_BLUE, WS2812B_YELLOW,
+    WS2812B_MAGENTA, WS2812B_CYAN, WS2812B_WHITE, WS2812B_ORANGE
+  };
+  
+  for(int cycle = 0; cycle < 2; cycle++) {
+    for(int i = 0; i < 8; i++) {
+      WS2812B_SetColorEnum(0, test_colors[i]);
+      WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
+      WS2812B_Update();
+      printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
+      HAL_Delay(500);
+    }
+  }
+  
+  // 彩虹效果测试
+  printf("彩虹效果测试...\r\n");
+  WS2812B_Test_Rainbow();
+  
+  // 呼吸灯效果测试
+  printf("呼吸灯效果测试...\r\n");
+  WS2812B_Test_Breathing();
+  
+  printf("WS2812B 测试完成!\r\n");
 	
 
   // 启用DWT循环计数器（用于微秒延时）
@@ -108,46 +146,46 @@ int main(void)
    DHT11_Data_t dht11_data;
    uint8_t dht11_success_count = 0;
 
-   for(int i = 0; i < 5; i++) {
-       printf("=== 第 %d 次读取 ===\r\n", i+1);
+  //  for(int i = 0; i < 5; i++) {
+  //      printf("=== 第 %d 次读取 ===\r\n", i+1);
        
-       // 读取DHT11数据（单独进行，避免其他操作干扰时序）
-       if(DHT11_ReadData(&dht11_data)) {
-           dht11_success_count++;
-           printf("  DHT11传感器读取成功:\r\n");
-           printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
-           printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
+  //      // 读取DHT11数据（单独进行，避免其他操作干扰时序）
+  //      if(DHT11_ReadData(&dht11_data)) {
+  //          dht11_success_count++;
+  //          printf("  DHT11传感器读取成功:\r\n");
+  //          printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
+  //          printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
            
-           // 数据合理性检查
-           if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
-               printf("  温湿度数据合理 \r\n");
-           } else {
-               printf("  温湿度数据可能异常！\r\n");
-           }
-       } else {
-           printf("  DHT11读取失败\r\n");
-       }
-       HAL_Delay(1000);  // 延时1秒后再测试其他传感器
+  //          // 数据合理性检查
+  //          if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
+  //              printf("  温湿度数据合理 \r\n");
+  //          } else {
+  //              printf("  温湿度数据可能异常！\r\n");
+  //          }
+  //      } else {
+  //          printf("  DHT11读取失败\r\n");
+  //      }
+  //      HAL_Delay(1000);  // 延时1秒后再测试其他传感器
        
-       // ADC测试
-       uint16_t adc_value = Get_ADC_Value();
-       float voltage = (adc_value * 3.3f) / 4095.0f;
-       printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
+  //      // ADC测试
+  //      uint16_t adc_value = Get_ADC_Value();
+  //      float voltage = (adc_value * 3.3f) / 4095.0f;
+  //      printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
 
-       // 振动检测
-       GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
-       printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
+  //      // 振动检测
+  //      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+  //      printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
 
-       // 触摸感应检测
-       GPIO_PinState state1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
-       printf("  触摸: %s\r\n", (state1 == GPIO_PIN_SET) ? "触发" : "未触发");
+  //      // 触摸感应检测
+  //      GPIO_PinState state1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+  //      printf("  触摸: %s\r\n", (state1 == GPIO_PIN_SET) ? "触发" : "未触发");
        
-       // DHT11需要至少2秒间隔，使用3秒更保险
-       HAL_Delay(2000); 
-   }
+  //      // DHT11需要至少2秒间隔，使用3秒更保险
+  //      HAL_Delay(2000); 
+  //  }
    
-   printf("DHT11测试完成，成功率: %d/5 (%.1f%%)\r\n", 
-          dht11_success_count, (float)dht11_success_count/5*100);
+  //  printf("DHT11测试完成，成功率: %d/5 (%.1f%%)\r\n", 
+  //         dht11_success_count, (float)dht11_success_count/5*100);
 
  
   /* Call init function for freertos objects (in cmsis_os2.c) */

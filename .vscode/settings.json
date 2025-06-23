@@ -4,6 +4,13 @@
         "ws2812b.h": "c",
         "tim.h": "c",
         "main.h": "c",
-        "rgb_led.h": "c"
+        "rgb_led.h": "c",
+        "ws2812b_driver.h": "c",
+        "stm32f4xx_hal.h": "c",
+        "stm32f4xx_hal_tim.h": "c",
+        "cmsis_os.h": "c",
+        "stm32f4xx_it.h": "c",
+        "string.h": "c",
+        "freertos.h": "c"
     }
 }

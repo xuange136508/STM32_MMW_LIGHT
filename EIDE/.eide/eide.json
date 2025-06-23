@@ -82,10 +82,10 @@
                     "path": "../Core/Src/i2c.c"
                   },
                   {
-                    "path": "../Core/Src/rgb_led.c"
+                    "path": "../Core/Src/tim.c"
                   },
                   {
-                    "path": "../Core/Src/tim.c"
+                    "path": "../Core/Src/ws2812b.c"
                   }
                 ],
                 "folders": []

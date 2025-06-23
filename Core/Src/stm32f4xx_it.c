@@ -55,7 +55,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+extern DMA_HandleTypeDef hdma_tim4_ch2;
 extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim1;
 
@@ -175,18 +176,32 @@ void TIM1_UP_TIM10_IRQHandler(void)
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 }
 
-/**
-  * @brief This function handles TIM3 global interrupt.
-  */
-void TIM3_IRQHandler(void)
+
+/* 在 stm32f4xx_it.c 文件中找到 TIM4_IRQHandler */
+void TIM4_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM3_IRQn 0 */
+  /* USER CODE BEGIN TIM4_IRQn 0 */
 
-  /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
-  /* USER CODE BEGIN TIM3_IRQn 1 */
+  /* USER CODE END TIM4_IRQn 0 */
+  // 这是 HAL 库的通用定时器中断处理函数，它会检查中断源并调用回调函数
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
 
-  /* USER CODE END TIM3_IRQn 1 */
+  /* USER CODE END TIM4_IRQn 1 */
+}
+
+/* 在 stm32f4xx_it.c 文件中找到 DMA1_Stream1_IRQHandler */
+// 确认您的TIM4_CH2对应的DMA通道是DMA1 Stream1 Channel2
+void DMA1_Stream3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
+
+  /* USER CODE END DMA1_Stream1_IRQn 0 */
+  // 这是 HAL 库的通用DMA中断处理函数，它会检查中断源并调用回调函数
+  HAL_DMA_IRQHandler(&hdma_tim4_ch2); // 使用正确的DMA句柄
+  /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream1_IRQn 1 */
 }
 
 /**

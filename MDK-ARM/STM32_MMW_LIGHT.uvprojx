@@ -492,6 +492,11 @@
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_timebase_tim.c</FilePath>
             </File>
+            <File>
+              <FileName>ws2812b_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\ws2812b_driver.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
