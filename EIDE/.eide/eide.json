@@ -86,9 +86,6 @@
                   },
                   {
                     "path": "../Core/Src/ws2812b.c"
-                  },
-                  {
-                    "path": "../Core/Src/rgb_led.c"
                   }
                 ],
                 "folders": []

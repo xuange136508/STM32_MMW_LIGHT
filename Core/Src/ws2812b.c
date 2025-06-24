@@ -34,7 +34,7 @@ void WS2812B_Init(void)
     // // 初始化TIM4
     // WS2812B_TIM4_Init();
     
-    // 清空LED
+    // 清空LED (不清除就是上次的显示)
     WS2812B_Clear();
 }
 
@@ -306,7 +306,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 } 
 
 /**
- * @brief DMA中断处理函数
+ * @brief DMA中断处理函数 （写在stm32f4xx_it.c中）
  */
 // void DMA1_Stream3_IRQHandler(void)
 // {

@@ -28,30 +28,17 @@
 #include "tim.h"
 #include <stdio.h>
 #include <math.h>
+#include "ws2812b.h"
+#include "dht11.h"
+#include "adc.h"
 /* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-/* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId rgbLedTaskHandle;
 osThreadId breathingLedTaskHandle;
+osThreadId sensorTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -61,6 +48,7 @@ osThreadId breathingLedTaskHandle;
 void StartDefaultTask(void const * argument);
 void StartRgbLedTask(void const * argument);
 void StartBreathingLedTask(void const * argument);
+void StartSensorTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -119,6 +107,10 @@ void MX_FREERTOS_Init(void) {
   /* Create Breathing LED task */
   osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
   breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
+  
+  /* Create Sensor monitoring task */
+  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 512);
+  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -145,13 +137,73 @@ void StartDefaultTask(void const * argument)
 /* USER CODE BEGIN Application */
 
  /**
-  * @brief RGB LED control task
+  * @brief RGB LED control task (WS2812B)
   * @param argument: Task argument
   * @retval None
   */
 void StartRgbLedTask(void const * argument)
 {
-
+  printf("WS2812B RGB LED Task started\r\n");
+  
+  // 初始化WS2812B RGB彩灯
+  WS2812B_Init();
+  printf("WS2812B 初始化完成\r\n");
+  
+  // 基础颜色测试
+  printf("设置LED颜色: LED0=红色, LED1=绿色\r\n");
+  WS2812B_SetColorEnum(0, WS2812B_RED);
+  WS2812B_SetColorEnum(1, WS2812B_GREEN);
+  WS2812B_Update();
+  osDelay(2000);
+  
+  // 测试多种颜色
+  printf("开始颜色循环测试...\r\n");
+  WS2812B_ColorEnum_t test_colors[] = {
+    WS2812B_RED, WS2812B_GREEN, WS2812B_BLUE, WS2812B_YELLOW,
+    WS2812B_MAGENTA, WS2812B_CYAN, WS2812B_WHITE, WS2812B_ORANGE
+  };
+  
+  for(int cycle = 0; cycle < 2; cycle++) {
+    for(int i = 0; i < 8; i++) {
+      WS2812B_SetColorEnum(0, test_colors[i]);
+      WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
+      WS2812B_Update();
+      printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
+      osDelay(500);
+    }
+  }
+  
+  // 彩虹效果测试
+  printf("彩虹效果测试...\r\n");
+  WS2812B_Test_Rainbow();
+  
+  // 呼吸灯效果测试
+  printf("呼吸灯效果测试...\r\n");
+  WS2812B_Test_Breathing();
+  
+  printf("WS2812B 初始测试完成!\r\n");
+  
+  // 无限循环 - 持续的RGB效果
+  for(;;)
+  {
+    // 循环彩虹效果
+    WS2812B_Test_Rainbow();
+    osDelay(1000);
+    
+    // 循环呼吸灯效果
+    WS2812B_Test_Breathing();
+    osDelay(1000);
+    
+    // 简单颜色切换
+    for(int i = 0; i < 8; i++) {
+      WS2812B_SetColorEnum(0, test_colors[i]);
+      WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
+      WS2812B_Update();
+      osDelay(800);
+    }
+    
+    osDelay(1000);
+  }
 }
 
 #define M_PI 3.14f  // 单精度浮点版本
@@ -191,6 +243,64 @@ void StartBreathingLedTask(void const * argument)
     // 延时控制呼吸频率
     osDelay(50);  // 50ms延时，可调节呼吸速度
   }
+}
+
+/**
+  * @brief 传感器监测任务 (DHT11, ADC, 振动, 触摸)
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartSensorTask(void const * argument)
+{
+  // 启用DWT循环计数器（用于微秒延时）
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  
+  DHT11_Data_t dht11_data;
+  uint8_t dht11_success_count = 0;
+  
+  // 初始测试循环
+  for(int i = 0; i < 5; i++) {
+      printf("=== 第 %d 次读取 ===\r\n", i+1);
+      
+      // 读取DHT11数据（单独进行，避免其他操作干扰时序）
+      if(DHT11_ReadData(&dht11_data)) {
+          dht11_success_count++;
+          printf("  DHT11传感器读取成功:\r\n");
+          printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
+          printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
+          
+          // 数据合理性检查
+          if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
+              printf("  温湿度数据合理 \r\n");
+          } else {
+              printf("  温湿度数据可能异常！\r\n");
+          }
+      } else {
+          printf("  DHT11读取失败\r\n");
+      }
+      osDelay(1000);  // 延时1秒后再测试其他传感器
+      
+      // ADC测试
+      uint16_t adc_value = Get_ADC_Value();
+      float voltage = (adc_value * 3.3f) / 4095.0f;
+      printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
+
+      // 振动检测
+      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+      printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
+
+      // 触摸感应检测
+      GPIO_PinState state1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+      printf("  触摸: %s\r\n", (state1 == GPIO_PIN_SET) ? "触发" : "未触发");
+      
+      // DHT11需要至少2秒间隔，使用3秒更保险
+      osDelay(2000); 
+  }
+  printf("DHT11测试完成，成功率: %d/5 (%.1f%%)\r\n", 
+         dht11_success_count, (float)dht11_success_count/5*100);
+  
 }
 
 /* USER CODE END Application */
