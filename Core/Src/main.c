@@ -88,10 +88,9 @@ int main(void)
   HAL_UART_Transmit(&huart1, (uint8_t *)msg, 25, HAL_MAX_DELAY);
 
 
-
   // LCD屏幕初始化
   LCD_Init();
-  LCD_Fill(0, 0, 239, 279, GREEN);
+  // LCD_Fill(0, 0, 239, 279, GREEN);
   // 快速显示测试
   // LCD_Fill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BLACK);
   // LCD_ShowString(20, 120, (uint8_t*)"STM32F407 Ready", WHITE, BLACK, 16, 0);
@@ -102,7 +101,7 @@ int main(void)
   // LCD_Test_Basic();      // 基础颜色填充测试
   // LCD_Test_Graphics();   // 图形绘制测试
   // LCD_Test_Text();       // 文字显示测试
-  LCD_Test_Colors();     // 颜色效果测试
+  // LCD_Test_Colors();     // 颜色效果测试
 
   // 初始化触摸屏
   CST816_Init();
