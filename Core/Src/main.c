@@ -89,25 +89,18 @@ int main(void)
   // printf("触摸屏初始化完成\r\n");
 
 
-  // 启用DWT循环计数器（用于微秒延时）
-  // CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  // DWT->CYCCNT = 0;
-  // DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-
-
   char msg[] = "UART初始化完成\r\n";
   HAL_UART_Transmit(&huart1, (uint8_t *)msg, 25, HAL_MAX_DELAY);
   
  
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
-
   /* Start scheduler */
   osKernelStart();
 
   while (1)
   {
-    // 这里的代码永远不会执行，因为FreeRTOS调度器已经接管控制权
+    // 这里的代码不会执行，因为FreeRTOS调度器已经接管控制权
   }
   
 }

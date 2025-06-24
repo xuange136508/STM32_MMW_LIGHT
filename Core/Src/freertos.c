@@ -39,6 +39,7 @@ osThreadId defaultTaskHandle;
 osThreadId rgbLedTaskHandle;
 osThreadId breathingLedTaskHandle;
 osThreadId sensorTaskHandle;
+osThreadId dht11TaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -49,6 +50,7 @@ void StartDefaultTask(void const * argument);
 void StartRgbLedTask(void const * argument);
 void StartBreathingLedTask(void const * argument);
 void StartSensorTask(void const * argument);
+void StartDHT11Task(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -109,8 +111,12 @@ void MX_FREERTOS_Init(void) {
   breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   
   /* Create Sensor monitoring task */
-  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 512);
+  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
   sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  
+  /* Create DHT11 temperature humidity task */
+  osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
+  dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   /* USER CODE END RTOS_THREADS */
 
 }
@@ -246,41 +252,18 @@ void StartBreathingLedTask(void const * argument)
 }
 
 /**
-  * @brief 传感器监测任务 (DHT11, ADC, 振动, 触摸)
+  * @brief 传感器监测任务 (ADC, 振动, 触摸) - 不包含DHT11
   * @param argument: 任务参数
   * @retval None
   */
 void StartSensorTask(void const * argument)
 {
-  // 启用DWT循环计数器（用于微秒延时）
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CYCCNT = 0;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-  
-  DHT11_Data_t dht11_data;
-  uint8_t dht11_success_count = 0;
+  printf("传感器监测任务启动 (ADC/振动/触摸)\r\n");
   
   // 初始测试循环
-  for(int i = 0; i < 5; i++) {
-      printf("=== 第 %d 次读取 ===\r\n", i+1);
-      
-      // 读取DHT11数据（单独进行，避免其他操作干扰时序）
-      if(DHT11_ReadData(&dht11_data)) {
-          dht11_success_count++;
-          printf("  DHT11传感器读取成功:\r\n");
-          printf("  湿度: %d.%d%%\r\n", dht11_data.humidity_int, dht11_data.humidity_dec);
-          printf("  温度: %d.%d°C\r\n", dht11_data.temperature_int, dht11_data.temperature_dec);
-          
-          // 数据合理性检查
-          if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
-              printf("  温湿度数据合理 \r\n");
-          } else {
-              printf("  温湿度数据可能异常！\r\n");
-          }
-      } else {
-          printf("  DHT11读取失败\r\n");
-      }
-      osDelay(1000);  // 延时1秒后再测试其他传感器
+  printf("开始传感器初始化测试...\r\n");
+  for(int i = 0; i < 3; i++) {
+      printf("=== 第 %d 次传感器测试 ===\r\n", i+1);
       
       // ADC测试
       uint16_t adc_value = Get_ADC_Value();
@@ -288,19 +271,86 @@ void StartSensorTask(void const * argument)
       printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
 
       // 振动检测
-      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
-      printf("  振动: %s\r\n", (state == GPIO_PIN_SET) ? "触发" : "未触发");
+      GPIO_PinState vibration_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+      printf("  振动: %s\r\n", (vibration_state == GPIO_PIN_SET) ? "触发" : "未触发");
 
       // 触摸感应检测
-      GPIO_PinState state1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
-      printf("  触摸: %s\r\n", (state1 == GPIO_PIN_SET) ? "触发" : "未触发");
+      GPIO_PinState touch_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+      printf("  触摸: %s\r\n", (touch_state == GPIO_PIN_SET) ? "触发" : "未触发");
       
-      // DHT11需要至少2秒间隔，使用3秒更保险
-      osDelay(2000); 
+      osDelay(1000); 
   }
-  printf("DHT11测试完成，成功率: %d/5 (%.1f%%)\r\n", 
-         dht11_success_count, (float)dht11_success_count/5*100);
   
+  printf("传感器初始化测试完成，开始持续监测...\r\n");
+  
+  // 持续监测循环 - 每5秒读取一次
+  for(;;)
+  {
+    // 读取ADC
+    uint16_t adc_value = Get_ADC_Value();
+    float voltage = (adc_value * 3.3f) / 4095.0f;
+    
+    // 检测振动和触摸
+    GPIO_PinState vibration = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+    GPIO_PinState touch = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+    
+    printf("传感器状态 - ADC: %.2fV  振动: %s  触摸: %s\r\n", 
+           voltage,
+           (vibration == GPIO_PIN_SET) ? "是" : "否",
+           (touch == GPIO_PIN_SET) ? "是" : "否");
+    
+    // 延时5秒
+    osDelay(5000);
+  }
+}
+
+/**
+  * @brief DHT11温湿度传感器独立任务
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartDHT11Task(void const * argument)
+{
+  printf("DHT11独立任务启动\r\n");
+  
+  // 启用DWT循环计数器（DHT11专用，用于微秒延时）
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  printf("DHT11: DWT计数器已启用\r\n");
+  
+  DHT11_Data_t dht11_data;
+  uint8_t dht11_success_count = 0;
+  uint32_t total_attempts = 0;
+  
+  // 初始化测试
+  printf("DHT11: 开始初始化测试...\r\n");
+  for(int i = 0; i < 5; i++) {
+      printf("DHT11: === 第 %d 次读取 ===\r\n", i+1);
+      
+      uint8_t read_result = DHT11_ReadData(&dht11_data);
+      if(read_result) {
+          dht11_success_count++;
+          printf("  DHT11读取成功: 湿度=%d.%d%% 温度=%d.%d°C\r\n", 
+                 dht11_data.humidity_int, dht11_data.humidity_dec,
+                 dht11_data.temperature_int, dht11_data.temperature_dec);
+          
+          // 数据合理性检查
+          if(dht11_data.humidity_int <= 99 && dht11_data.temperature_int < 60) {
+              printf("  数据合理性检查: 通过\r\n");
+          } else {
+              printf("  数据合理性检查: 异常！\r\n");
+          }
+      } else {
+          printf("  DHT11读取失败\r\n");
+      }
+      
+      // DHT11需要至少2秒间隔
+      osDelay(3000); 
+  }
+  
+  printf("DHT11初始化完成，成功率: %d/5 (%.1f%%)\r\n", 
+         dht11_success_count, (float)dht11_success_count/5*100);
 }
 
 /* USER CODE END Application */
