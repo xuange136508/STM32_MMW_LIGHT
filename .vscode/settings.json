@@ -11,6 +11,9 @@
         "cmsis_os.h": "c",
         "stm32f4xx_it.h": "c",
         "string.h": "c",
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "lcdfont.h": "c",
+        "i2c.h": "c",
+        "cst816.h": "c"
     }
 }

@@ -76,32 +76,11 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* USER CODE BEGIN RTOS_THREADS */
   /* Create RGB LED control task */
   osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
   rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
@@ -117,7 +96,6 @@ void MX_FREERTOS_Init(void) {
   /* Create DHT11 temperature humidity task */
   osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
   dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
-  /* USER CODE END RTOS_THREADS */
 
 }
 
@@ -311,17 +289,13 @@ void StartSensorTask(void const * argument)
   */
 void StartDHT11Task(void const * argument)
 {
-  printf("DHT11独立任务启动\r\n");
-  
   // 启用DWT循环计数器（DHT11专用，用于微秒延时）
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-  printf("DHT11: DWT计数器已启用\r\n");
   
   DHT11_Data_t dht11_data;
   uint8_t dht11_success_count = 0;
-  uint32_t total_attempts = 0;
   
   // 初始化测试
   printf("DHT11: 开始初始化测试...\r\n");

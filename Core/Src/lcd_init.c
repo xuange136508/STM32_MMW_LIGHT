@@ -2,25 +2,6 @@
 #include "delay.h"
 #include "spi.h"
 
-void LCD_GPIO_Init(void)
-{
-    // GPIO初始化通常在CubeMX生成的代码中完成
-    // 如果手动初始化，可以这样配置：
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    
-    // 配置RES, DC, CS, BLK引脚为输出
-    GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
-}
 /******************************************************************************
       函数说明：LCD串行数据写入函数
       入口数据：dat  要写入的串行数据
@@ -31,7 +12,9 @@ void LCD_Writ_Bus(uint8_t dat)
 	
 	LCD_CS_Clr();
     // 使用HAL库的SPI发送函数
-    HAL_SPI_Transmit_DMA(&hspi1, &dat, 1);
+    HAL_SPI_Transmit(&hspi1, &dat, 1, 1000);
+	//HAL_SPI_Transmit_DMA(&hspi1, &dat, 1); // 注意这里DMA的方式驱动，注释掉就点亮屏幕了
+
 //	delay_us(1);
 //    while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
     // 等待传输完成（HAL_SPI_Transmit已经包含等待）
@@ -128,14 +111,14 @@ void LCD_Address_Set(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 
 void LCD_Init(void)
 {
-	// LCD_GPIO_Init();//初始化GPIO
-	
 	LCD_RES_Clr();//复位
 	delay_ms(100);
 	LCD_RES_Set();
 	delay_ms(100);
 	
-	LCD_BLK_Set();//打开背光
+	//打开背光(电平拉低)
+	LCD_BLK_Clr();
+	// LCD_BLK_Set();
   	delay_ms(100);
 	
 	//************* Start Initial Sequence **********//

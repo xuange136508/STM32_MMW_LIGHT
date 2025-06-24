@@ -6,16 +6,16 @@
 // #include "dma.h"
 #include <stdlib.h>
 
-extern DMA_HandleTypeDef hdma_spi1_tx;
+// extern DMA_HandleTypeDef hdma_spi1_tx;
 
-#define MAX_BUFFER_SIZE 512  // ¸ù¾İ¿ÉÓÃRAMµ÷Õû
+#define MAX_BUFFER_SIZE 512  // æ ¹æ®å¯ç”¨RAMè°ƒæ•´
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÔÚÖ¸¶¨ÇøÓòÌî³äÑÕÉ«
-      Èë¿ÚÊı¾İ£ºxsta,ysta   ÆğÊ¼×ø±ê
-                xend,yend   ÖÕÖ¹×ø±ê
-								color       ÒªÌî³äµÄÑÕÉ«
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šåœ¨æŒ‡å®šåŒºåŸŸå¡«å……é¢œè‰²
+      å…¥å£æ•°æ®ï¼šxsta,ysta   èµ·å§‹åæ ‡
+                xend,yend   ç»ˆæ­¢åæ ‡
+								color       è¦å¡«å……çš„é¢œè‰²
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16_t color)
 {          
@@ -24,9 +24,9 @@ void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16
     uint32_t chunk_size;
     uint8_t first_chunk = 1;
     
-    LCD_Address_Set(xsta, ysta, xend, yend); // ÉèÖÃÏÔÊ¾·¶Î§
+    LCD_Address_Set(xsta, ysta, xend, yend); // è®¾ç½®æ˜¾ç¤ºèŒƒå›´
     
-	// ×¼±¸ÑÕÉ«Êı¾İ (¸ßÎ»ÔÚÇ°)
+	// å‡†å¤‡é¢œè‰²æ•°æ® (é«˜ä½åœ¨å‰)
     uint8_t colorHi = color >> 8;
     uint8_t colorLo = color;
 
@@ -38,10 +38,10 @@ void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16
 //    {
 //        chunk_size = (num > 65534) ? 65534 : num;
 //        
-//        // ÅäÖÃDMA´«Êä
+//        // é…ç½®DMAä¼ è¾“
 ////        HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*)color_buf, chunk_size);
 ////        
-////        // µÈ´ıDMA´«ÊäÍê³É
+////        // ç­‰å¾…DMAä¼ è¾“å®Œæˆ
 ////        while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 
 //		LCD_WR_DATA_Bulk((uint16_t*)color_buf,chunk_size);
@@ -57,14 +57,14 @@ void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16
 
 void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
 	
-    LCD_Address_Set(x0, y0, x1, y1); // ÉèÖÃÏÔÊ¾·¶Î§
+    LCD_Address_Set(x0, y0, x1, y1); // è®¾ç½®æ˜¾ç¤ºèŒƒå›´
 
     uint32_t pixelCount = (x1 - x0 + 1) * (y1 - y0 + 1);
     uint8_t colorHi = color >> 8;
     uint8_t colorLo = color & 0xFF;
 
-    // ¾²Ì¬»º³åÇø£¨·Ö¿é´«Êä£©
-    uint8_t buffer[MAX_BUFFER_SIZE * 2];  // Ã¿¸öÏñËØ2×Ö½Ú
+    // é™æ€ç¼“å†²åŒºï¼ˆåˆ†å—ä¼ è¾“ï¼‰
+    uint8_t buffer[MAX_BUFFER_SIZE * 2];  // æ¯ä¸ªåƒç´ 2å­—èŠ‚
     uint32_t pixelsPerBlock = MAX_BUFFER_SIZE / 2;
     uint32_t remaining = pixelCount;
 
@@ -74,13 +74,13 @@ void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
     while (remaining > 0) {
         uint32_t currentPixels = (remaining > pixelsPerBlock) ? pixelsPerBlock : remaining;
         
-        // Ìî³äµ±Ç°¿é
+        // å¡«å……å½“å‰å—
         for (uint32_t i = 0; i < currentPixels; i++) {
             buffer[i * 2] = colorHi;
             buffer[i * 2 + 1] = colorLo;
         }
 
-        // ·¢ËÍµ±Ç°¿é
+        // å‘é€å½“å‰å—
         HAL_SPI_Transmit(&hspi1, buffer, currentPixels * 2, HAL_MAX_DELAY);
         remaining -= currentPixels;
     }
@@ -89,45 +89,45 @@ void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 }
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÔÚÖ¸¶¨Î»ÖÃ»­µã
-      Èë¿ÚÊı¾İ£ºx,y »­µã×ø±ê
-                color µãµÄÑÕÉ«
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šåœ¨æŒ‡å®šä½ç½®ç”»ç‚¹
+      å…¥å£æ•°æ®ï¼šx,y ç”»ç‚¹åæ ‡
+                color ç‚¹çš„é¢œè‰²
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_DrawPoint(uint16_t x,uint16_t y,uint16_t color)
 {
-	LCD_Address_Set(x,y,x,y);//ÉèÖÃ¹â±êÎ»ÖÃ 
+	LCD_Address_Set(x,y,x,y);//è®¾ç½®å…‰æ ‡ä½ç½® 
 	LCD_WR_DATA(color);
 } 
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£º»­Ïß
-      Èë¿ÚÊı¾İ£ºx1,y1   ÆğÊ¼×ø±ê
-                x2,y2   ÖÕÖ¹×ø±ê
-                color   ÏßµÄÑÕÉ«
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šç”»çº¿
+      å…¥å£æ•°æ®ï¼šx1,y1   èµ·å§‹åæ ‡
+                x2,y2   ç»ˆæ­¢åæ ‡
+                color   çº¿çš„é¢œè‰²
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_DrawLine(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t color)
 {
 	uint16_t t; 
 	int xerr=0,yerr=0,delta_x,delta_y,distance;
 	int incx,incy,uRow,uCol;
-	delta_x=x2-x1; //¼ÆËã×ø±êÔöÁ¿ 
+	delta_x=x2-x1; //è®¡ç®—åæ ‡å¢é‡ 
 	delta_y=y2-y1;
-	uRow=x1;//»­ÏßÆğµã×ø±ê
+	uRow=x1;//ç”»çº¿èµ·ç‚¹åæ ‡
 	uCol=y1;
-	if(delta_x>0)incx=1; //ÉèÖÃµ¥²½·½Ïò 
-	else if (delta_x==0)incx=0;//´¹Ö±Ïß 
+	if(delta_x>0)incx=1; //è®¾ç½®å•æ­¥æ–¹å‘ 
+	else if (delta_x==0)incx=0;//å‚ç›´çº¿ 
 	else {incx=-1;delta_x=-delta_x;}
 	if(delta_y>0)incy=1;
-	else if (delta_y==0)incy=0;//Ë®Æ½Ïß 
+	else if (delta_y==0)incy=0;//æ°´å¹³çº¿ 
 	else {incy=-1;delta_y=-delta_y;}
-	if(delta_x>delta_y)distance=delta_x; //Ñ¡È¡»ù±¾ÔöÁ¿×ø±êÖá 
+	if(delta_x>delta_y)distance=delta_x; //é€‰å–åŸºæœ¬å¢é‡åæ ‡è½´ 
 	else distance=delta_y;
 	for(t=0;t<distance+1;t++)
 	{
-		LCD_DrawPoint(uRow,uCol,color);//»­µã
+		LCD_DrawPoint(uRow,uCol,color);//ç”»ç‚¹
 		xerr+=delta_x;
 		yerr+=delta_y;
 		if(xerr>distance)
@@ -144,7 +144,7 @@ void LCD_DrawLine(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2,uint16_t color
 }
 
 void DrawThickLine(int x0, int y0, int x1, int y1, int thickness, uint16_t color) {
-    // ±ß½ç¼ì²é
+    // è¾¹ç•Œæ£€æŸ¥
     if(x0 < 0) x0 = 0;
     if(y0 < 0) y0 = 0;
     if(x1 < 0) x1 = 0;
@@ -154,13 +154,13 @@ void DrawThickLine(int x0, int y0, int x1, int y1, int thickness, uint16_t color
     if(x1 >= SCREEN_WIDTH) x1 = SCREEN_WIDTH - 1;
     if(y1 >= SCREEN_HEIGHT) y1 = SCREEN_HEIGHT - 1;
     
-    // ¼ò»¯°æ´ÖÏß»æÖÆ
+    // ç®€åŒ–ç‰ˆç²—çº¿ç»˜åˆ¶
     int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int err = dx + dy, e2;
     
     for(;;) {
-        // »­´Öµã
+        // ç”»ç²—ç‚¹
         for(int i = -thickness; i <= thickness; i++) {
             for(int j = -thickness; j <= thickness; j++) {
                 if(x0 + i >= 0 && x0 + i < SCREEN_WIDTH && 
@@ -179,11 +179,11 @@ void DrawThickLine(int x0, int y0, int x1, int y1, int thickness, uint16_t color
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£º»­¾ØĞÎ
-      Èë¿ÚÊı¾İ£ºx1,y1   ÆğÊ¼×ø±ê
-                x2,y2   ÖÕÖ¹×ø±ê
-                color   ¾ØĞÎµÄÑÕÉ«
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šç”»çŸ©å½¢
+      å…¥å£æ•°æ®ï¼šx1,y1   èµ·å§‹åæ ‡
+                x2,y2   ç»ˆæ­¢åæ ‡
+                color   çŸ©å½¢çš„é¢œè‰²
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_DrawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,uint16_t color)
 {
@@ -195,11 +195,11 @@ void LCD_DrawRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,uint16
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£º»­Ô²
-      Èë¿ÚÊı¾İ£ºx0,y0   Ô²ĞÄ×ø±ê
-                r       °ë¾¶
-                color   Ô²µÄÑÕÉ«
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šç”»åœ†
+      å…¥å£æ•°æ®ï¼šx0,y0   åœ†å¿ƒåæ ‡
+                r       åŠå¾„
+                color   åœ†çš„é¢œè‰²
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void Draw_Circle(uint16_t x0,uint16_t y0,uint8_t r,uint16_t color)
 {
@@ -216,7 +216,7 @@ void Draw_Circle(uint16_t x0,uint16_t y0,uint8_t r,uint16_t color)
 		LCD_DrawPoint(x0+a,y0+b,color);             //6 
 		LCD_DrawPoint(x0-b,y0+a,color);             //7
 		a++;
-		if((a*a+b*b)>(r*r))//ÅĞ¶ÏÒª»­µÄµãÊÇ·ñ¹ıÔ¶
+		if((a*a+b*b)>(r*r))//åˆ¤æ–­è¦ç”»çš„ç‚¹æ˜¯å¦è¿‡è¿œ
 		{
 			b--;
 		}
@@ -224,14 +224,14 @@ void Draw_Circle(uint16_t x0,uint16_t y0,uint8_t r,uint16_t color)
 }
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾ºº×Ö´®
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *s ÒªÏÔÊ¾µÄºº×Ö´®
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ ¿ÉÑ¡ 16 24 32
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºæ±‰å­—ä¸²
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *s è¦æ˜¾ç¤ºçš„æ±‰å­—ä¸²
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å· å¯é€‰ 16 24 32
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChinese(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
@@ -248,25 +248,25 @@ void LCD_ShowChinese(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,ui
 }
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾µ¥¸ö12x12ºº×Ö
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *s ÒªÏÔÊ¾µÄºº×Ö
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå•ä¸ª12x12æ±‰å­—
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *s è¦æ˜¾ç¤ºçš„æ±‰å­—
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChinese12x12(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
 	uint8_t i,j,m=0;
 	uint16_t k;
-	uint16_t HZnum;//ºº×ÖÊıÄ¿
-	uint16_t TypefaceNum;//Ò»¸ö×Ö·ûËùÕ¼×Ö½Ú´óĞ¡
+	uint16_t HZnum;//æ±‰å­—æ•°ç›®
+	uint16_t TypefaceNum;//ä¸€ä¸ªå­—ç¬¦æ‰€å å­—èŠ‚å¤§å°
 	uint16_t x0=x;
 	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
 	                         
-	HZnum=sizeof(tfont12)/sizeof(typFNT_GB12);	//Í³¼Æºº×ÖÊıÄ¿
+	HZnum=sizeof(tfont12)/sizeof(typFNT_GB12);	//ç»Ÿè®¡æ±‰å­—æ•°ç›®
 	for(k=0;k<HZnum;k++) 
 	{
 		if((tfont12[k].Index[0]==*(s))&&(tfont12[k].Index[1]==*(s+1)))
@@ -276,7 +276,7 @@ void LCD_ShowChinese12x12(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 			{
 				for(j=0;j<8;j++)
 				{	
-					if(!mode)//·Çµş¼Ó·½Ê½
+					if(!mode)//éå åŠ æ–¹å¼
 					{
 						if(tfont12[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
 						else LCD_WR_DATA(bc);
@@ -287,9 +287,9 @@ void LCD_ShowChinese12x12(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 							break;
 						}
 					}
-					else//µş¼Ó·½Ê½
+					else//å åŠ æ–¹å¼
 					{
-						if(tfont12[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//»­Ò»¸öµã
+						if(tfont12[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//ç”»ä¸€ä¸ªç‚¹
 						x++;
 						if((x-x0)==sizey)
 						{
@@ -301,30 +301,30 @@ void LCD_ShowChinese12x12(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 				}
 			}
 		}				  	
-		continue;  //²éÕÒµ½¶ÔÓ¦µãÕó×Ö¿âÁ¢¼´ÍË³ö£¬·ÀÖ¹¶à¸öºº×ÖÖØ¸´È¡Ä£´øÀ´Ó°Ïì
+		continue;  //æŸ¥æ‰¾åˆ°å¯¹åº”ç‚¹é˜µå­—åº“ç«‹å³é€€å‡ºï¼Œé˜²æ­¢å¤šä¸ªæ±‰å­—é‡å¤å–æ¨¡å¸¦æ¥å½±å“
 	}
 } 
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾µ¥¸ö16x16ºº×Ö
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *s ÒªÏÔÊ¾µÄºº×Ö
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå•ä¸ª16x16æ±‰å­—
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *s è¦æ˜¾ç¤ºçš„æ±‰å­—
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChinese16x16(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
 	uint8_t i,j,m=0;
 	uint16_t k;
-	uint16_t HZnum;//ºº×ÖÊıÄ¿
-	uint16_t TypefaceNum;//Ò»¸ö×Ö·ûËùÕ¼×Ö½Ú´óĞ¡
+	uint16_t HZnum;//æ±‰å­—æ•°ç›®
+	uint16_t TypefaceNum;//ä¸€ä¸ªå­—ç¬¦æ‰€å å­—èŠ‚å¤§å°
 	uint16_t x0=x;
   TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	HZnum=sizeof(tfont16)/sizeof(typFNT_GB16);	//Í³¼Æºº×ÖÊıÄ¿
+	HZnum=sizeof(tfont16)/sizeof(typFNT_GB16);	//ç»Ÿè®¡æ±‰å­—æ•°ç›®
 	for(k=0;k<HZnum;k++) 
 	{
 		if ((tfont16[k].Index[0]==*(s))&&(tfont16[k].Index[1]==*(s+1)))
@@ -334,7 +334,7 @@ void LCD_ShowChinese16x16(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 			{
 				for(j=0;j<8;j++)
 				{	
-					if(!mode)//·Çµş¼Ó·½Ê½
+					if(!mode)//éå åŠ æ–¹å¼
 					{
 						if(tfont16[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
 						else LCD_WR_DATA(bc);
@@ -345,9 +345,9 @@ void LCD_ShowChinese16x16(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 							break;
 						}
 					}
-					else//µş¼Ó·½Ê½
+					else//å åŠ æ–¹å¼
 					{
-						if(tfont16[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//»­Ò»¸öµã
+						if(tfont16[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//ç”»ä¸€ä¸ªç‚¹
 						x++;
 						if((x-x0)==sizey)
 						{
@@ -359,30 +359,30 @@ void LCD_ShowChinese16x16(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 				}
 			}
 		}				  	
-		continue;  //²éÕÒµ½¶ÔÓ¦µãÕó×Ö¿âÁ¢¼´ÍË³ö£¬·ÀÖ¹¶à¸öºº×ÖÖØ¸´È¡Ä£´øÀ´Ó°Ïì
+		continue;  //æŸ¥æ‰¾åˆ°å¯¹åº”ç‚¹é˜µå­—åº“ç«‹å³é€€å‡ºï¼Œé˜²æ­¢å¤šä¸ªæ±‰å­—é‡å¤å–æ¨¡å¸¦æ¥å½±å“
 	}
 } 
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾µ¥¸ö24x24ºº×Ö
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *s ÒªÏÔÊ¾µÄºº×Ö
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå•ä¸ª24x24æ±‰å­—
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *s è¦æ˜¾ç¤ºçš„æ±‰å­—
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChinese24x24(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
 	uint8_t i,j,m=0;
 	uint16_t k;
-	uint16_t HZnum;//ºº×ÖÊıÄ¿
-	uint16_t TypefaceNum;//Ò»¸ö×Ö·ûËùÕ¼×Ö½Ú´óĞ¡
+	uint16_t HZnum;//æ±‰å­—æ•°ç›®
+	uint16_t TypefaceNum;//ä¸€ä¸ªå­—ç¬¦æ‰€å å­—èŠ‚å¤§å°
 	uint16_t x0=x;
 	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	HZnum=sizeof(tfont24)/sizeof(typFNT_GB24);	//Í³¼Æºº×ÖÊıÄ¿
+	HZnum=sizeof(tfont24)/sizeof(typFNT_GB24);	//ç»Ÿè®¡æ±‰å­—æ•°ç›®
 	for(k=0;k<HZnum;k++) 
 	{
 		if ((tfont24[k].Index[0]==*(s))&&(tfont24[k].Index[1]==*(s+1)))
@@ -392,7 +392,7 @@ void LCD_ShowChinese24x24(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 			{
 				for(j=0;j<8;j++)
 				{	
-					if(!mode)//·Çµş¼Ó·½Ê½
+					if(!mode)//éå åŠ æ–¹å¼
 					{
 						if(tfont24[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
 						else LCD_WR_DATA(bc);
@@ -403,9 +403,9 @@ void LCD_ShowChinese24x24(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 							break;
 						}
 					}
-					else//µş¼Ó·½Ê½
+					else//å åŠ æ–¹å¼
 					{
-						if(tfont24[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//»­Ò»¸öµã
+						if(tfont24[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//ç”»ä¸€ä¸ªç‚¹
 						x++;
 						if((x-x0)==sizey)
 						{
@@ -417,29 +417,29 @@ void LCD_ShowChinese24x24(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 				}
 			}
 		}				  	
-		continue;  //²éÕÒµ½¶ÔÓ¦µãÕó×Ö¿âÁ¢¼´ÍË³ö£¬·ÀÖ¹¶à¸öºº×ÖÖØ¸´È¡Ä£´øÀ´Ó°Ïì
+		continue;  //æŸ¥æ‰¾åˆ°å¯¹åº”ç‚¹é˜µå­—åº“ç«‹å³é€€å‡ºï¼Œé˜²æ­¢å¤šä¸ªæ±‰å­—é‡å¤å–æ¨¡å¸¦æ¥å½±å“
 	}
 } 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾µ¥¸ö32x32ºº×Ö
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *s ÒªÏÔÊ¾µÄºº×Ö
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå•ä¸ª32x32æ±‰å­—
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *s è¦æ˜¾ç¤ºçš„æ±‰å­—
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChinese32x32(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
 	uint8_t i,j,m=0;
 	uint16_t k;
-	uint16_t HZnum;//ºº×ÖÊıÄ¿
-	uint16_t TypefaceNum;//Ò»¸ö×Ö·ûËùÕ¼×Ö½Ú´óĞ¡
+	uint16_t HZnum;//æ±‰å­—æ•°ç›®
+	uint16_t TypefaceNum;//ä¸€ä¸ªå­—ç¬¦æ‰€å å­—èŠ‚å¤§å°
 	uint16_t x0=x;
 	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	HZnum=sizeof(tfont32)/sizeof(typFNT_GB32);	//Í³¼Æºº×ÖÊıÄ¿
+	HZnum=sizeof(tfont32)/sizeof(typFNT_GB32);	//ç»Ÿè®¡æ±‰å­—æ•°ç›®
 	for(k=0;k<HZnum;k++) 
 	{
 		if ((tfont32[k].Index[0]==*(s))&&(tfont32[k].Index[1]==*(s+1)))
@@ -449,7 +449,7 @@ void LCD_ShowChinese32x32(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 			{
 				for(j=0;j<8;j++)
 				{	
-					if(!mode)//·Çµş¼Ó·½Ê½
+					if(!mode)//éå åŠ æ–¹å¼
 					{
 						if(tfont32[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
 						else LCD_WR_DATA(bc);
@@ -460,9 +460,9 @@ void LCD_ShowChinese32x32(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 							break;
 						}
 					}
-					else//µş¼Ó·½Ê½
+					else//å åŠ æ–¹å¼
 					{
-						if(tfont32[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//»­Ò»¸öµã
+						if(tfont32[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//ç”»ä¸€ä¸ªç‚¹
 						x++;
 						if((x-x0)==sizey)
 						{
@@ -474,40 +474,40 @@ void LCD_ShowChinese32x32(uint16_t x,uint16_t y,uint8_t *s,uint16_t fc,uint16_t 
 				}
 			}
 		}				  	
-		continue;  //²éÕÒµ½¶ÔÓ¦µãÕó×Ö¿âÁ¢¼´ÍË³ö£¬·ÀÖ¹¶à¸öºº×ÖÖØ¸´È¡Ä£´øÀ´Ó°Ïì
+		continue;  //æŸ¥æ‰¾åˆ°å¯¹åº”ç‚¹é˜µå­—åº“ç«‹å³é€€å‡ºï¼Œé˜²æ­¢å¤šä¸ªæ±‰å­—é‡å¤å–æ¨¡å¸¦æ¥å½±å“
 	}
 }
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾µ¥¸ö×Ö·û
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                num ÒªÏÔÊ¾µÄ×Ö·û
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå•ä¸ªå­—ç¬¦
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                num è¦æ˜¾ç¤ºçš„å­—ç¬¦
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowChar(uint16_t x,uint16_t y,uint8_t num,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {
 	uint8_t temp,sizex,t,m=0;
-	uint16_t i,TypefaceNum;//Ò»¸ö×Ö·ûËùÕ¼×Ö½Ú´óĞ¡
+	uint16_t i,TypefaceNum;//ä¸€ä¸ªå­—ç¬¦æ‰€å å­—èŠ‚å¤§å°
 	uint16_t x0=x;
 	sizex=sizey/2;
 	TypefaceNum=(sizex/8+((sizex%8)?1:0))*sizey;
-	num=num-' ';    //µÃµ½Æ«ÒÆºóµÄÖµ
-	LCD_Address_Set(x,y,x+sizex-1,y+sizey-1);  //ÉèÖÃ¹â±êÎ»ÖÃ 
+	num=num-' ';    //å¾—åˆ°åç§»åçš„å€¼
+	LCD_Address_Set(x,y,x+sizex-1,y+sizey-1);  //è®¾ç½®å…‰æ ‡ä½ç½® 
 	for(i=0;i<TypefaceNum;i++)
 	{ 
-		if(sizey==12)temp=ascii_1206[num][i];		       //µ÷ÓÃ6x12×ÖÌå
-		else if(sizey==16)temp=ascii_1608[num][i];		 //µ÷ÓÃ8x16×ÖÌå
-		else if(sizey==24)temp=ascii_2412[num][i];		 //µ÷ÓÃ12x24×ÖÌå
-		else if(sizey==32)temp=ascii_3216[num][i];		 //µ÷ÓÃ16x32×ÖÌå
+		if(sizey==12)temp=ascii_1206[num][i];		       //è°ƒç”¨6x12å­—ä½“
+		else if(sizey==16)temp=ascii_1608[num][i];		 //è°ƒç”¨8x16å­—ä½“
+		else if(sizey==24)temp=ascii_2412[num][i];		 //è°ƒç”¨12x24å­—ä½“
+		else if(sizey==32)temp=ascii_3216[num][i];		 //è°ƒç”¨16x32å­—ä½“
 		else return;
 		for(t=0;t<8;t++)
 		{
-			if(!mode)//·Çµş¼ÓÄ£Ê½
+			if(!mode)//éå åŠ æ¨¡å¼
 			{
 				if(temp&(0x01<<t))LCD_WR_DATA(fc);
 				else LCD_WR_DATA(bc);
@@ -518,9 +518,9 @@ void LCD_ShowChar(uint16_t x,uint16_t y,uint8_t num,uint16_t fc,uint16_t bc,uint
 					break;
 				}
 			}
-			else//µş¼ÓÄ£Ê½
+			else//å åŠ æ¨¡å¼
 			{
-				if(temp&(0x01<<t))LCD_DrawPoint(x,y,fc);//»­Ò»¸öµã
+				if(temp&(0x01<<t))LCD_DrawPoint(x,y,fc);//ç”»ä¸€ä¸ªç‚¹
 				x++;
 				if((x-x0)==sizex)
 				{
@@ -535,14 +535,14 @@ void LCD_ShowChar(uint16_t x,uint16_t y,uint8_t num,uint16_t fc,uint16_t bc,uint
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾×Ö·û´®
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                *p ÒªÏÔÊ¾µÄ×Ö·û´®
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-                mode:  0·Çµş¼ÓÄ£Ê½  1µş¼ÓÄ£Ê½
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå­—ç¬¦ä¸²
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                *p è¦æ˜¾ç¤ºçš„å­—ç¬¦ä¸²
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+                mode:  0éå åŠ æ¨¡å¼  1å åŠ æ¨¡å¼
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowString(uint16_t x,uint16_t y,const uint8_t *p,uint16_t fc,uint16_t bc,uint8_t sizey,uint8_t mode)
 {         
@@ -556,9 +556,9 @@ void LCD_ShowString(uint16_t x,uint16_t y,const uint8_t *p,uint16_t fc,uint16_t 
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾Êı×Ö
-      Èë¿ÚÊı¾İ£ºmµ×Êı£¬nÖ¸Êı
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºæ•°å­—
+      å…¥å£æ•°æ®ï¼šmåº•æ•°ï¼ŒnæŒ‡æ•°
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 uint32_t mypow(uint8_t m,uint8_t n)
 {
@@ -569,14 +569,14 @@ uint32_t mypow(uint8_t m,uint8_t n)
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾ÕûÊı±äÁ¿
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                num ÒªÏÔÊ¾ÕûÊı±äÁ¿
-                len ÒªÏÔÊ¾µÄÎ»Êı
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºæ•´æ•°å˜é‡
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                num è¦æ˜¾ç¤ºæ•´æ•°å˜é‡
+                len è¦æ˜¾ç¤ºçš„ä½æ•°
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowIntNum(uint16_t x,uint16_t y,uint16_t num,uint8_t len,uint16_t fc,uint16_t bc,uint8_t sizey)
 {         	
@@ -601,14 +601,14 @@ void LCD_ShowIntNum(uint16_t x,uint16_t y,uint16_t num,uint8_t len,uint16_t fc,u
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾Á½Î»Ğ¡Êı±äÁ¿
-      Èë¿ÚÊı¾İ£ºx,yÏÔÊ¾×ø±ê
-                num ÒªÏÔÊ¾Ğ¡Êı±äÁ¿
-                len ÒªÏÔÊ¾µÄÎ»Êı
-                fc ×ÖµÄÑÕÉ«
-                bc ×ÖµÄ±³¾°É«
-                sizey ×ÖºÅ
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºä¸¤ä½å°æ•°å˜é‡
+      å…¥å£æ•°æ®ï¼šx,yæ˜¾ç¤ºåæ ‡
+                num è¦æ˜¾ç¤ºå°æ•°å˜é‡
+                len è¦æ˜¾ç¤ºçš„ä½æ•°
+                fc å­—çš„é¢œè‰²
+                bc å­—çš„èƒŒæ™¯è‰²
+                sizey å­—å·
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowFloatNum1(uint16_t x,uint16_t y,float num,uint8_t len,uint16_t fc,uint16_t bc,uint8_t sizey)
 {         	
@@ -631,40 +631,40 @@ void LCD_ShowFloatNum1(uint16_t x,uint16_t y,float num,uint8_t len,uint16_t fc,u
 
 
 /******************************************************************************
-      º¯ÊıËµÃ÷£ºÏÔÊ¾Í¼Æ¬
-      Èë¿ÚÊı¾İ£ºx,yÆğµã×ø±ê
-                length Í¼Æ¬³¤¶È
-                width  Í¼Æ¬¿í¶È
-                pic[]  Í¼Æ¬Êı×é    
-      ·µ»ØÖµ£º  ÎŞ
+      å‡½æ•°è¯´æ˜ï¼šæ˜¾ç¤ºå›¾ç‰‡
+      å…¥å£æ•°æ®ï¼šx,yèµ·ç‚¹åæ ‡
+                length å›¾ç‰‡é•¿åº¦
+                width  å›¾ç‰‡å®½åº¦
+                pic[]  å›¾ç‰‡æ•°ç»„    
+      è¿”å›å€¼ï¼š  æ— 
 ******************************************************************************/
 void LCD_ShowPicture(uint16_t x, uint16_t y, uint16_t length, uint16_t width, const uint8_t pic[])
 {
-        // ¼ÆËãÏÔÊ¾ÇøÓòµÄ½áÊø×ø±ê
+        // è®¡ç®—æ˜¾ç¤ºåŒºåŸŸçš„ç»“æŸåæ ‡
     uint16_t x_end = x + length;
     uint16_t y_end = y + width;
     
-    // ÉèÖÃÏÔÊ¾·¶Î§
+    // è®¾ç½®æ˜¾ç¤ºèŒƒå›´
     LCD_Address_Set(x, y, x_end, y_end);
     
-    // ¼ÆËã×ÜÏñËØÊı
+    // è®¡ç®—æ€»åƒç´ æ•°
     uint32_t pixelCount = length * width;
     
-    // ¼ÆËãÍ¼Æ¬Êı¾İ×Ü×Ö½ÚÊı (¼ÙÉèÃ¿¸öÏñËØ2×Ö½Ú)
+    // è®¡ç®—å›¾ç‰‡æ•°æ®æ€»å­—èŠ‚æ•° (å‡è®¾æ¯ä¸ªåƒç´ 2å­—èŠ‚)
     uint32_t dataSize = pixelCount * 2;
     
-    // ·Ö¿é´«Êä²ÎÊı
+    // åˆ†å—ä¼ è¾“å‚æ•°
     uint32_t remaining = dataSize;
     uint32_t offset = 0;
     
     LCD_CS_Clr();
     LCD_DC_Set();
     
-    // ·Ö¿é´«ÊäÍ¼Æ¬Êı¾İ
+    // åˆ†å—ä¼ è¾“å›¾ç‰‡æ•°æ®
     while (remaining > 0) {
         uint32_t chunkSize = (remaining > MAX_BUFFER_SIZE) ? MAX_BUFFER_SIZE : remaining;
         
-        // ·¢ËÍµ±Ç°Êı¾İ¿é
+        // å‘é€å½“å‰æ•°æ®å—
         HAL_SPI_Transmit(&hspi1, (uint8_t*)(pic + offset), chunkSize, HAL_MAX_DELAY);
         
         offset += chunkSize;
@@ -674,7 +674,7 @@ void LCD_ShowPicture(uint16_t x, uint16_t y, uint16_t length, uint16_t width, co
     LCD_CS_Set();
 }
 
-/* »æÖÆÑÕÉ«Ìõ */
+/* ç»˜åˆ¶é¢œè‰²æ¡ */
 void DrawColorBars(void) {
     uint16_t colors[] = {RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA};
     for (int i=0; i<6; i++) {
@@ -682,38 +682,71 @@ void DrawColorBars(void) {
     }
 }
 
-/* »æÖÆ»Ò¶È½¥±ä */
+/* ç»˜åˆ¶ç°åº¦æ¸å˜ */
 void DrawGrayscale(void) {
     #define GRAY_LEVELS 24
     const uint16_t level_width = SCREEN_WIDTH / GRAY_LEVELS;
     const uint16_t remainder = SCREEN_WIDTH % GRAY_LEVELS;
 
     for (uint8_t n = 0; n < GRAY_LEVELS; n++) {
-        // ¼ÆËãµ±Ç°»Ò¶È¼¶ÇøÓò·¶Î§
+        // è®¡ç®—å½“å‰ç°åº¦çº§åŒºåŸŸèŒƒå›´
         uint16_t start_x = n * level_width;
         uint16_t end_x = start_x + level_width - 1;
 
-        // ´¦ÀíÓàÊıÏñËØ£¬¼ÓÔÚ×îºóÒ»¼¶
+        // å¤„ç†ä½™æ•°åƒç´ ï¼ŒåŠ åœ¨æœ€åä¸€çº§
         if (n == GRAY_LEVELS - 1) {
             end_x += remainder;
         }
 
-        // ¼ÆËã24¼¶»Ò¶ÈÖµ (0~23 ¡ú 0~255)
+        // è®¡ç®—24çº§ç°åº¦å€¼ (0~23 â†’ 0~255)
         uint8_t gray = (n * 255) / (GRAY_LEVELS - 1);
         
-        // Éú³ÉRGB565ÑÕÉ«£¨ĞèÈ·±£ÒÑÊµÏÖRGBºê£©
+        // ç”ŸæˆRGB565é¢œè‰²ï¼ˆéœ€ç¡®ä¿å·²å®ç°RGBå®ï¼‰
         uint16_t color = RGB(gray, gray, gray);
         
-        // Ìî³ä»Ò¶È´øÇøÓò
+        // å¡«å……ç°åº¦å¸¦åŒºåŸŸ
         LCD_FillRect_FastStatic(start_x, 0, end_x, SCREEN_HEIGHT-1, color);
     }
 }
 
-/* »æÖÆÇåÆÁ°´Å¥ */
+/* ç»˜åˆ¶æ¸…å±æŒ‰é’® */
 void DrawClearButton(void) {
     LCD_FillRect_FastStatic(SCREEN_WIDTH-BTN_WIDTH, SCREEN_HEIGHT-BTN_HEIGHT, 
             SCREEN_WIDTH, SCREEN_HEIGHT, GRAY);
     LCD_ShowString(SCREEN_WIDTH-BTN_WIDTH+5, SCREEN_HEIGHT-BTN_HEIGHT+8, 
                   "Clear", BLACK, GRAY, 16, 0);
+}
+
+
+/**
+  * @brief  åœ¨æŒ‡å®šä½ç½®å¡«å……ä¸€ä¸ªåœ†
+  * @param  x0,y0: åœ†å¿ƒåæ ‡
+  * @param  r: åœ†çš„åŠå¾„
+  * @param  color: å¡«å……é¢œè‰²
+  * @retval æ— 
+  */
+void LCD_FillCircle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color) {
+    if (r == 0) return;
+    
+    int16_t x = r;
+    int16_t y = 0;
+    int16_t err = 0;
+    
+    while (x >= y) {
+        // å¡«å……æ°´å¹³çº¿
+        LCD_Fill(x0 - x, y0 + y, x0 + x, y0 + y, color);
+        LCD_Fill(x0 - y, y0 + x, x0 + y, y0 + x, color);
+        LCD_Fill(x0 - x, y0 - y, x0 + x, y0 - y, color);
+        LCD_Fill(x0 - y, y0 - x, x0 + y, y0 - x, color);
+        
+        if (err <= 0) {
+            y += 1;
+            err += 2*y + 1;
+        }
+        if (err > 0) {
+            x -= 1;
+            err -= 2*x + 1;
+        }
+    }
 }
 
