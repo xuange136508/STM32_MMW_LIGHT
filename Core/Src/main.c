@@ -120,6 +120,9 @@ int main(void)
   //           lastX = lastY = -1; // 手指抬起时重置
   //         }
   // }
+
+  // 显示中文测试
+  // LCD_ShowChinese(80, 150, "妈妈网", GREEN, BLACK, 16, 0);
   
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
@@ -279,7 +282,7 @@ void LCD_Test_Text(void)
     LCD_Fill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BLACK);
     
     printf("  测试1: 显示英文字符串\r\n");
-    LCD_ShowString(10, 10, (uint8_t*)"STM32F407", WHITE, BLACK, 16, 0);
+    LCD_ShowChinese(10, 10, (uint8_t*)"STM32F407", WHITE, BLACK, 16, 0);
     LCD_ShowString(10, 30, (uint8_t*)"LCD Test", RED, BLACK, 16, 0);
     LCD_ShowString(10, 50, (uint8_t*)"Hello World!", GREEN, BLACK, 16, 0);
     HAL_Delay(2000);

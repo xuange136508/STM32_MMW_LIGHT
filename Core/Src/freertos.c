@@ -295,27 +295,27 @@ void StartSensorTask(void const * argument)
   printf("传感器监测任务启动 (ADC/振动/触摸)\r\n");
   
   // 初始测试循环
-  printf("开始传感器初始化测试...\r\n");
-  for(int i = 0; i < 3; i++) {
-      printf("=== 第 %d 次传感器测试 ===\r\n", i+1);
+  // printf("开始传感器初始化测试...\r\n");
+  // for(int i = 0; i < 3; i++) {
+  //     printf("=== 第 %d 次传感器测试 ===\r\n", i+1);
       
-      // ADC测试
-      uint16_t adc_value = Get_ADC_Value();
-      float voltage = (adc_value * 3.3f) / 4095.0f;
-      printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
+  //     // ADC测试
+  //     uint16_t adc_value = Get_ADC_Value();
+  //     float voltage = (adc_value * 3.3f) / 4095.0f;
+  //     printf("  ADC: %hu (%.2fV)\r\n", adc_value, voltage);
 
-      // 振动检测
-      GPIO_PinState vibration_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
-      printf("  振动: %s\r\n", (vibration_state == GPIO_PIN_SET) ? "触发" : "未触发");
+  //     // 振动检测
+  //     GPIO_PinState vibration_state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8);
+  //     printf("  振动: %s\r\n", (vibration_state == GPIO_PIN_SET) ? "触发" : "未触发");
 
-      // 触摸感应检测
-      GPIO_PinState touch_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
-      printf("  触摸: %s\r\n", (touch_state == GPIO_PIN_SET) ? "触发" : "未触发");
+  //     // 触摸感应检测
+  //     GPIO_PinState touch_state = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+  //     printf("  触摸: %s\r\n", (touch_state == GPIO_PIN_SET) ? "触发" : "未触发");
       
-      osDelay(1000); 
-  }
+  //     osDelay(1000); 
+  // }
   
-  printf("传感器初始化测试完成，开始持续监测...\r\n");
+  // printf("传感器初始化测试完成，开始持续监测...\r\n");
   
   // 持续监测循环 - 每5秒读取一次
   for(;;)
@@ -392,7 +392,7 @@ void StartDHT11Task(void const * argument)
   // printf("DHT11初始化完成，成功率: %d/5 (%.1f%%)\r\n", 
   //        dht11_success_count, (float)dht11_success_count/5*100);
          
-  // 持续监测循环 - 每15秒读取一次
+  // 持续监测循环 - 每3秒读取一次
   for(;;)
   {
     uint8_t read_result = DHT11_ReadData(&dht11_data);
@@ -408,8 +408,8 @@ void StartDHT11Task(void const * argument)
       g_sensor_data.dht11_valid = 0;
       printf("DHT11读取失败\r\n");
     }
-    // 延时15秒
-    osDelay(15000);
+    // 延时3秒
+    osDelay(3000);
   }
 }
 
@@ -464,17 +464,17 @@ void LCD_DrawUI(void)
   LCD_Fill(0, 0, SCREEN_WIDTH-1, SCREEN_HEIGHT-1, BLACK);
   
   // 标题
-  LCD_ShowString(50, 5, (uint8_t*)"Sensor Monitor", WHITE, BLACK, 16, 0);
+  LCD_ShowChinese(30, 5, (uint8_t*)"妈妈网传感器监控系统", WHITE, BLACK, 16, 0);
   
   // 传感器状态区域标题
-  LCD_ShowString(10, 30, (uint8_t*)"[Sensor Status]", YELLOW, BLACK, 12, 0);
+  LCD_ShowChinese(10, 30, (uint8_t*)"【传感器状态】", YELLOW, BLACK, 12, 0);
   
   // 按钮区域标题
-  LCD_ShowString(10, 190, (uint8_t*)"[Control Buttons]", YELLOW, BLACK, 12, 0);
+  LCD_ShowChinese(10, 190, (uint8_t*)"【控制面板】", YELLOW, BLACK, 12, 0);
   
   // 绘制按钮
-  LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "BreathLED", g_control_state.breathing_led_enabled);
-  LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "RGB LED", g_control_state.rgb_led_enabled);
+  LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "呼吸灯", g_control_state.breathing_led_enabled);
+  LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "彩色灯", g_control_state.rgb_led_enabled);
 }
 
 /**
@@ -496,7 +496,7 @@ void LCD_DrawButton(uint16_t x, uint16_t y, uint16_t width, uint16_t height, con
   uint16_t text_x = x + (width - text_len * 8) / 2;  // 假设字符宽度8像素
   uint16_t text_y = y + (height - 16) / 2;           // 假设字符高度16像素
   
-  LCD_ShowString(text_x, text_y, (uint8_t*)text, text_color, bg_color, 16, 0);
+  LCD_ShowChinese(text_x, text_y, (uint8_t*)text, text_color, bg_color, 16, 0);
 }
 
 /**
@@ -509,30 +509,38 @@ void LCD_UpdateSensorData(void)
   // 清除传感器数据显示区域 (保留其他UI元素)
   LCD_Fill(10, 50, SCREEN_WIDTH-10, 180, BLACK);
   
-  // 显示ADC光敏值
-  sprintf(buffer, "Light ADC: %.2fV", g_sensor_data.adc_voltage);
-  LCD_ShowString(10, 50, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
+  // 显示光敏传感器
+  LCD_ShowChinese(10, 50, (uint8_t*)"光敏：", WHITE, BLACK, 16, 0);
+  sprintf(buffer, "%.2fV", g_sensor_data.adc_voltage);
+  LCD_ShowString(70, 50, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
   
-  // 显示振动状态
-  sprintf(buffer, "Vibration: %s", g_sensor_data.vibration_detected ? "YES" : "NO");
-  LCD_ShowString(10, 70, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
+  // 显示振动传感器
+  LCD_ShowChinese(10, 70, (uint8_t*)"振动：", WHITE, BLACK, 16, 0);
+  sprintf(buffer, "%s", g_sensor_data.vibration_detected ? "是" : "否");
+  LCD_ShowChinese(70, 70, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
   
-  // 显示触摸状态
-  sprintf(buffer, "Touch: %s", g_sensor_data.touch_detected ? "YES" : "NO");
-  LCD_ShowString(10, 90, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
+  // 显示触摸传感器
+  LCD_ShowChinese(10, 90, (uint8_t*)"触摸：", WHITE, BLACK, 16, 0);
+  sprintf(buffer, "%s", g_sensor_data.touch_detected ? "是" : "否");
+  LCD_ShowChinese(70, 90, (uint8_t*)buffer, WHITE, BLACK, 16, 0);
   
   // 显示温湿度数据
-  if(g_sensor_data.dht11_valid) {
-    sprintf(buffer, "Humidity=%.1f%% Temp=%.1fC", g_sensor_data.humidity, g_sensor_data.temperature);
-    LCD_ShowString(10, 110, (uint8_t*)buffer, CYAN, BLACK, 16, 0);
-  } else {
-    // 异常数据不显示
-    // LCD_ShowString(10, 110, (uint8_t*)"Humidity=-- Temp=--", RED, BLACK, 16, 0);
-  }
+  // if(g_sensor_data.dht11_valid) {
+    LCD_ShowChinese(10, 110, (uint8_t*)"温度：", CYAN, BLACK, 16, 0);
+    sprintf(buffer, "%.1f", g_sensor_data.temperature);
+    LCD_ShowString(50, 110, (uint8_t*)buffer, CYAN, BLACK, 16, 0);
+    LCD_ShowChinese(90, 115, (uint8_t*)"℃", CYAN, BLACK, 16, 0);
+    
+    LCD_ShowChinese(130, 110, (uint8_t*)"湿度：", CYAN, BLACK, 16, 0);
+    sprintf(buffer, "%.1f%%", g_sensor_data.humidity);
+    LCD_ShowString(180, 110, (uint8_t*)buffer, CYAN, BLACK, 16, 0);
+  // }
   
-  // 显示系统状态
-  sprintf(buffer, "Uptime: %lu s", HAL_GetTick()/1000);
-  LCD_ShowString(10, 130, (uint8_t*)buffer, LIGHTGREEN, BLACK, 16, 0);
+  // 显示运行时间
+  LCD_ShowChinese(10, 130, (uint8_t*)"运行：", LIGHTGREEN, BLACK, 16, 0);
+  sprintf(buffer, "%lu", HAL_GetTick()/1000);
+  LCD_ShowString(50, 130, (uint8_t*)buffer, LIGHTGREEN, BLACK, 16, 0);
+  LCD_ShowChinese(70, 130, (uint8_t*)(uint8_t*)"秒", LIGHTGREEN, BLACK, 16, 0);
 }
 
 /**
@@ -555,7 +563,7 @@ void LCD_HandleTouch(void)
       printf("Breathing LED state: %s\r\n", g_control_state.breathing_led_enabled ? "ON" : "OFF");
       
       // 重绘按钮
-      LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "BreathLED", g_control_state.breathing_led_enabled);
+      LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "呼吸灯", g_control_state.breathing_led_enabled);
       
       // 延时防抖
       osDelay(300);
@@ -569,7 +577,7 @@ void LCD_HandleTouch(void)
       printf("RGB LED state: %s\r\n", g_control_state.rgb_led_enabled ? "ON" : "OFF");
       
       // 重绘按钮
-      LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "RGB LED", g_control_state.rgb_led_enabled);
+      LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "彩色灯", g_control_state.rgb_led_enabled);
       
       // 延时防抖
       osDelay(300);
@@ -587,12 +595,12 @@ void LCD_UpdateButtons(void)
   
   // 只有状态改变时才重绘按钮，避免频繁刷新
   if(last_breathing_state != g_control_state.breathing_led_enabled) {
-    LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "BreathLED", g_control_state.breathing_led_enabled);
+    LCD_DrawButton(BTN1_X, BTN1_Y, BTN_WIDTH, BTN_HEIGHT, "呼吸灯", g_control_state.breathing_led_enabled);
     last_breathing_state = g_control_state.breathing_led_enabled;
   }
   
   if(last_rgb_state != g_control_state.rgb_led_enabled) {
-    LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "RGB LED", g_control_state.rgb_led_enabled);
+    LCD_DrawButton(BTN2_X, BTN2_Y, BTN_WIDTH, BTN_HEIGHT, "彩色灯", g_control_state.rgb_led_enabled);
     last_rgb_state = g_control_state.rgb_led_enabled;
   }
 }
