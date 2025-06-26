@@ -20,6 +20,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include "lvgl.h"
+#include "stdio.h"
+#include "stm32f4xx_hal_tim.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -177,17 +181,13 @@ void TIM1_UP_TIM10_IRQHandler(void)
 }
 
 
-/* 在 stm32f4xx_it.c 文件中找到 TIM4_IRQHandler */
+/* 定时器4中断函数 */
 void TIM4_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM4_IRQn 0 */
-
-  /* USER CODE END TIM4_IRQn 0 */
   // 这是 HAL 库的通用定时器中断处理函数，它会检查中断源并调用回调函数
   HAL_TIM_IRQHandler(&htim4);
-  /* USER CODE BEGIN TIM4_IRQn 1 */
 
-  /* USER CODE END TIM4_IRQn 1 */
+
 }
 
 void DMA1_Stream3_IRQHandler(void)

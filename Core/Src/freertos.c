@@ -35,7 +35,8 @@
 #include "lcd_init.h"
 #include "CST816.h"
 #include <string.h>
-/* USER CODE END Includes */
+#include "lvgl.h"
+
 
 // 全局传感器数据结构
 typedef struct {
@@ -73,6 +74,7 @@ osThreadId breathingLedTaskHandle;
 osThreadId sensorTaskHandle;
 osThreadId dht11TaskHandle;
 osThreadId lcdDisplayTaskHandle;
+osThreadId lvglTaskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -85,6 +87,7 @@ void StartBreathingLedTask(void const * argument);
 void StartSensorTask(void const * argument);
 void StartDHT11Task(void const * argument);
 void StartLcdDisplayTask(void const * argument);
+void StartLvglTask(void const * argument);
 
 // LCD显示功能函数声明
 void LCD_DrawUI(void);
@@ -92,6 +95,10 @@ void LCD_DrawButton(uint16_t x, uint16_t y, uint16_t width, uint16_t height, con
 void LCD_UpdateSensorData(void);
 void LCD_HandleTouch(void);
 void LCD_UpdateButtons(void);
+
+// LVGL相关函数声明
+void LVGL_CreateInterface(void);
+static void btn_event_cb(lv_event_t * e);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -139,8 +146,12 @@ void MX_FREERTOS_Init(void) {
   dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   
   /* Create LCD Display task */
-  osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
-  lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
+  // osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
+  // lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
+  
+  /* Create LVGL task - 处理GUI更新和按钮事件 */
+  osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
+  lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
 
 }
 
@@ -604,5 +615,117 @@ void LCD_UpdateButtons(void)
     last_rgb_state = g_control_state.rgb_led_enabled;
   }
 }
+
+/**
+  * @brief LVGL任务 - 处理GUI更新和按钮事件
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartLvglTask(void const * argument)
+{
+  printf("LVGL任务启动 - 支持按钮事件处理\r\n");
+  
+  // 等待LVGL驱动初始化完成
+  osDelay(2000);
+  
+  printf("开始创建LVGL界面...\r\n");
+  
+  // 创建LVGL界面
+  LVGL_CreateInterface();
+  
+  printf("LVGL界面创建完成，开始主循环\r\n");
+  
+  // LVGL主循环
+  for(;;)
+  {
+    // 更新LVGL tick计数
+    lv_tick_inc(5);
+    
+    // 处理LVGL任务 - 这是LVGL的核心处理函数，包括事件处理
+    lv_timer_handler();
+    
+    // 每5ms处理一次LVGL任务，保证界面流畅和事件响应
+    osDelay(5);
+  }
+}
+
+/**
+  * @brief 创建LVGL界面
+  * @retval None
+  */
+void LVGL_CreateInterface(void)
+{
+  printf("正在创建LVGL界面组件...\r\n");
+  
+  // 立即尝试刷新屏幕看看显示驱动是否被调用
+  lv_disp_load_scr(lv_scr_act());
+  
+  // 先测试LVGL基础显示 - 简单的屏幕填充
+  lv_obj_t * scr = lv_scr_act();
+  lv_obj_set_style_bg_color(scr, lv_color_hex(0x003a57), LV_PART_MAIN);
+  
+  // 创建简单测试标签
+  lv_obj_t *label = lv_label_create(scr);
+  lv_label_set_text(label, "LVGL Test");
+  lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
+  lv_obj_align(label, LV_ALIGN_CENTER, 0, -50);
+  
+  // 创建按钮测试
+  lv_obj_t *btn = lv_btn_create(scr);
+  lv_obj_set_size(btn, 120, 50);
+  lv_obj_align(btn, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_t *btn_label = lv_label_create(btn);
+  lv_label_set_text(btn_label, "Test Button");
+  lv_obj_center(btn_label);
+  
+  // 为按钮添加点击事件处理
+  lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
+  
+  printf("LVGL界面组件创建完成\r\n");
+  
+  // 初始渲染几次确保界面显示
+  for(int i = 0; i < 10; i++) {
+    lv_timer_handler();  
+    osDelay(5);
+  }
+}
+
+/**
+  * @brief LVGL按钮点击事件处理函数
+  * @param e: 事件参数
+  * @retval None
+  */
+static void btn_event_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * btn = lv_event_get_target(e);
+    
+    if(code == LV_EVENT_CLICKED) {
+        printf("===== LVGL按钮被点击了! =====\r\n");
+        printf("事件类型: LV_EVENT_CLICKED\r\n");
+        printf("按钮对象地址: 0x%08X\r\n", (uint32_t)btn);
+        
+        // 获取当前时间戳（可选）
+        uint32_t tick = HAL_GetTick();
+        printf("时间戳: %lu ms\r\n", tick);
+        
+        // 可以在这里添加更多的功能
+        // 比如改变按钮颜色、文字等
+        static uint8_t click_count = 0;
+        click_count++;
+        printf("按钮点击次数: %d\r\n", click_count);
+        
+        // 更新按钮文字显示点击次数
+        char btn_text[32];
+        snprintf(btn_text, sizeof(btn_text), "Clicked %d", click_count);
+        lv_obj_t * btn_label = lv_obj_get_child(btn, 0);
+        if(btn_label != NULL) {
+            lv_label_set_text(btn_label, btn_text);
+        }
+        printf("=============================\r\n");
+    }
+}
+
+
 
 /* USER CODE END Application */

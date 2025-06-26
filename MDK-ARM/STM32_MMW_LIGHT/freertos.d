@@ -58,3 +58,9 @@ stm32_mmw_light\freertos.o: ../Core/Inc/ws2812b.h
 stm32_mmw_light\freertos.o: ../Core/Inc/dht11.h
 stm32_mmw_light\freertos.o: ../Core/Inc/gpio.h
 stm32_mmw_light\freertos.o: ../Core/Inc/adc.h
+stm32_mmw_light\freertos.o: ../Core/Inc/lcd.h
+stm32_mmw_light\freertos.o: ../Core/Inc/lcd_init.h
+stm32_mmw_light\freertos.o: ../Core/Inc/CST816.h
+stm32_mmw_light\freertos.o: ../Core/Inc/iic_hal_hard.h
+stm32_mmw_light\freertos.o: ../Core/Inc/delay.h
+stm32_mmw_light\freertos.o: D:\Keil5Mdk\ARM\ARMCC\Bin\..\include\string.h

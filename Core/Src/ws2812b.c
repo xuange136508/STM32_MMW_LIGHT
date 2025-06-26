@@ -303,6 +303,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (htim->Instance == TIM1) {
         HAL_IncTick();
     }
+
+    // TIM4触发的中断
+    if (htim->Instance == TIM4) {  
+        // 清除中断标志
+        // __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
+        // 更新LVGL时间基准（假设1ms中断一次）
+        lv_tick_inc(1);
+    }
 } 
 
 /**

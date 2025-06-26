@@ -14,6 +14,11 @@
         "freertos.h": "c",
         "lcdfont.h": "c",
         "i2c.h": "c",
-        "cst816.h": "c"
+        "cst816.h": "c",
+        "lv_port_disp.h": "c",
+        "lvgl_demo.h": "c",
+        "lvgl.h": "c",
+        "lv_port_disp_template.h": "c",
+        "lv_port_indev_template.h": "c"
     }
 }

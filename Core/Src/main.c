@@ -18,6 +18,10 @@
 #include "ws2812b.h"
 
 
+#include "lvgl.h"
+#include "lv_port_disp.h"
+#include "lv_port_indev.h"
+#include "lv_demo_keypad_encoder.h"
 
 // 重定向 printf 到 UART
 #ifdef __GNUC__
@@ -59,6 +63,7 @@ void LCD_Test_Text(void);
 void LCD_Test_Colors(void);
 void LCD_Test_All(void);
 
+// LVGL相关界面创建已移动到FreeRTOS任务中
 
 
 /**
@@ -124,6 +129,14 @@ int main(void)
   // 显示中文测试
   // LCD_ShowChinese(80, 150, "妈妈网", GREEN, BLACK, 16, 0);
   
+  // LVGL驱动初始化（界面创建将在FreeRTOS任务中进行）
+  printf("初始化LVGL驱动...\r\n");
+  lv_init();
+  lv_port_disp_init();  // LVGL显示驱动
+  lv_port_indev_init(); // LVGL输入驱动
+  printf("LVGL驱动初始化完成，界面将在FreeRTOS任务中创建\r\n");
+  
+  printf("启动FreeRTOS调度器...\r\n");
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
   /* Start scheduler */
@@ -390,6 +403,8 @@ void LCD_Test_All(void)
 }
 
 
+
+
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
@@ -421,3 +436,6 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+
+
