@@ -24,6 +24,8 @@ void LCD_ShowFloatNum1(uint16_t x,uint16_t y,float num,uint8_t len,uint16_t fc,u
 
 void LCD_ShowPicture(uint16_t x,uint16_t y,uint16_t length,uint16_t width,const uint8_t pic[]);//显示图片
 
+// LVGL 优化函数
+void LCD_Fill_Area_Buffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t *color_buffer);
 
 void DrawColorBars(void);
 void DrawGrayscale(void);

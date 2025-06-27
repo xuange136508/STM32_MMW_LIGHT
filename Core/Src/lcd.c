@@ -750,3 +750,40 @@ void LCD_FillCircle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color) {
     }
 }
 
+/******************************************************************************
+      函数说明：LVGL 优化 - 批量传输像素缓冲区到指定区域
+      入口数据：x1,y1   起始坐标
+                x2,y2   终止坐标
+                color_buffer 像素颜色缓冲区 (16位RGB565格式)
+      返回值：  无
+      说明：    这个函数专门为 LVGL 优化，避免逐像素传输的开销
+******************************************************************************/
+void LCD_Fill_Area_Buffer(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t *color_buffer)
+{
+    uint32_t pixel_count = (x2 - x1 + 1) * (y2 - y1 + 1);
+    
+    // 设置显示区域
+    LCD_Address_Set(x1, y1, x2, y2);
+    
+    LCD_CS_Clr();
+    LCD_DC_Set();
+    
+    // 使用 SPI 批量传输，每次传输多个像素以提高效率
+    uint8_t *byte_buffer = (uint8_t *)color_buffer;
+    uint32_t bytes_to_send = pixel_count * 2; // 每个像素2字节
+    
+    // 分块传输以避免超时
+    const uint32_t chunk_size = 1024; // 每次传输1024字节
+    uint32_t remaining = bytes_to_send;
+    
+    while (remaining > 0) {
+        uint32_t current_chunk = (remaining > chunk_size) ? chunk_size : remaining;
+        HAL_SPI_Transmit(&hspi1, byte_buffer, current_chunk, HAL_MAX_DELAY);
+        byte_buffer += current_chunk;
+        remaining -= current_chunk;
+    }
+    
+    LCD_CS_Set();
+}
+
+
