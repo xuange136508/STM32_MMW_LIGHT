@@ -36,7 +36,7 @@
 #include "CST816.h"
 #include <string.h>
 #include "lvgl.h"
-
+#include "lv_demo_keypad_encoder.h"
 
 // 全局传感器数据结构
 typedef struct {
@@ -130,20 +130,20 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* Create RGB LED control task */
-  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
-  /* Create Breathing LED task */
-  osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
-  breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
+  // /* Create Breathing LED task */
+  // osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
+  // breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   
-  /* Create Sensor monitoring task */
-  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
-  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  // /* Create Sensor monitoring task */
+  // osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
+  // sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
   
-  /* Create DHT11 temperature humidity task */
-  osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
-  dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
+  // /* Create DHT11 temperature humidity task */
+  // osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
+  // dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   
   /* Create LCD Display task */
   // osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
@@ -623,27 +623,22 @@ void LCD_UpdateButtons(void)
   */
 void StartLvglTask(void const * argument)
 {
-  printf("LVGL任务启动 - 支持按钮事件处理\r\n");
-  
   // 等待LVGL驱动初始化完成
   osDelay(2000);
-  
-  printf("开始创建LVGL界面...\r\n");
-  
   // 创建LVGL界面
-  LVGL_CreateInterface();
-  
-  printf("LVGL界面创建完成，开始主循环\r\n");
-  
-  // LVGL主循环
+  // LVGL_CreateInterface();
+
+  printf("lv_demo_keypad_encoder 开始\r\n");
+  // 测试demo
+  lv_demo_keypad_encoder();
+  printf("lv_demo_keypad_encoder 结束\r\n");
+
   for(;;)
   {
     // 更新LVGL tick计数
     lv_tick_inc(5);
-    
     // 处理LVGL任务 - 这是LVGL的核心处理函数，包括事件处理
     lv_timer_handler();
-    
     // 每5ms处理一次LVGL任务，保证界面流畅和事件响应
     osDelay(5);
   }
@@ -655,21 +650,17 @@ void StartLvglTask(void const * argument)
   */
 void LVGL_CreateInterface(void)
 {
-  printf("正在创建LVGL界面组件...\r\n");
-  
-  // 立即尝试刷新屏幕看看显示驱动是否被调用
+  // 试刷新屏幕看看显示驱动是否被调用
   lv_disp_load_scr(lv_scr_act());
   
-  // 先测试LVGL基础显示 - 简单的屏幕填充
+  // 先测试LVGL基础显示
   lv_obj_t * scr = lv_scr_act();
   lv_obj_set_style_bg_color(scr, lv_color_hex(0x003a57), LV_PART_MAIN);
-  
   // 创建简单测试标签
   lv_obj_t *label = lv_label_create(scr);
   lv_label_set_text(label, "LVGL Test");
   lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
   lv_obj_align(label, LV_ALIGN_CENTER, 0, -50);
-  
   // 创建按钮测试
   lv_obj_t *btn = lv_btn_create(scr);
   lv_obj_set_size(btn, 120, 50);
@@ -677,11 +668,9 @@ void LVGL_CreateInterface(void)
   lv_obj_t *btn_label = lv_label_create(btn);
   lv_label_set_text(btn_label, "Test Button");
   lv_obj_center(btn_label);
-  
   // 为按钮添加点击事件处理
   lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
   
-  printf("LVGL界面组件创建完成\r\n");
   
   // 初始渲染几次确保界面显示
   for(int i = 0; i < 10; i++) {

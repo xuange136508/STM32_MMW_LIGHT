@@ -309,7 +309,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         // 清除中断标志
         // __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
         // 更新LVGL时间基准（假设1ms中断一次）
-        lv_tick_inc(1);
+        // lv_tick_inc(1);
     }
 } 
 

@@ -129,12 +129,11 @@ int main(void)
   // 显示中文测试
   // LCD_ShowChinese(80, 150, "妈妈网", GREEN, BLACK, 16, 0);
   
-  // LVGL驱动初始化（界面创建将在FreeRTOS任务中进行）
-  printf("初始化LVGL驱动...\r\n");
+  // LVGL驱动初始化
   lv_init();
   lv_port_disp_init();  // LVGL显示驱动
   lv_port_indev_init(); // LVGL输入驱动
-  printf("LVGL驱动初始化完成，界面将在FreeRTOS任务中创建\r\n");
+  
   
   printf("启动FreeRTOS调度器...\r\n");
   /* Call init function for freertos objects (in cmsis_os2.c) */
