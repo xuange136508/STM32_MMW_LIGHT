@@ -37,6 +37,7 @@
 #include <string.h>
 #include "lvgl.h"
 #include "lv_demo_keypad_encoder.h"
+#include "usart.h"  // 添加UART头文件
 
 // 全局传感器数据结构
 typedef struct {
@@ -75,6 +76,7 @@ osThreadId sensorTaskHandle;
 osThreadId dht11TaskHandle;
 osThreadId lcdDisplayTaskHandle;
 osThreadId lvglTaskHandle;
+osThreadId esp32CommTaskHandle;  // 添加ESP32通信任务句柄
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -88,6 +90,7 @@ void StartSensorTask(void const * argument);
 void StartDHT11Task(void const * argument);
 void StartLcdDisplayTask(void const * argument);
 void StartLvglTask(void const * argument);
+void StartESP32CommTask(void const * argument);  
 
 // LCD显示功能函数声明
 void LCD_DrawUI(void);
@@ -129,30 +132,33 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* Create RGB LED control task */
-  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  /* rgb彩灯 */
+  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
-  // /* Create Breathing LED task */
-  // osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
-  // breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
+  /* led呼吸灯 */
+  osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
+  breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   
-  // /* Create Sensor monitoring task */
-  // osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
-  // sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  /* 传感器监测 */
+  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
+  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
   
-  // /* Create DHT11 temperature humidity task */
-  // osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
-  // dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
+  /* DHT11温湿度传感器 */
+  osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
+  dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   
-  /* Create LCD Display task */
-  // osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
-  // lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
+  /* LCD显示 */
+  osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
+  lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
   
-  /* Create LVGL task - 处理GUI更新和按钮事件 */
-  osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
-  lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
-
+  /* ESP32通信 */
+  osThreadDef(esp32CommTask, StartESP32CommTask, osPriorityNormal, 0, 512);
+  esp32CommTaskHandle = osThreadCreate(osThread(esp32CommTask), NULL);
+  
+  /* LVGL任务 - 处理GUI更新和按钮事件 */
+  // osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
+  // lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -208,7 +214,7 @@ void StartRgbLedTask(void const * argument)
       WS2812B_SetColorEnum(0, test_colors[i]);
       WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
       WS2812B_Update();
-      printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
+      // printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
       osDelay(500);
     }
   }
@@ -715,6 +721,57 @@ static void btn_event_cb(lv_event_t * e)
     }
 }
 
-
+/**
+  * @brief ESP32通信任务 - 处理与ESP32的JSON数据通信
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartESP32CommTask(void const * argument)
+{
+  // 等待系统初始化完成
+  osDelay(3000);
+  
+  // 初始化ESP32通信
+  ESP32_Init();
+  
+  // JSON缓冲区
+  char json_buffer[512];
+  
+  // 发送初始状态
+  ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
+  ESP32_SendJSON(json_buffer);
+  
+  uint32_t last_sensor_send = HAL_GetTick();
+  uint32_t last_status_send = HAL_GetTick();
+  
+  for(;;)
+  {
+    uint32_t current_time = HAL_GetTick();
+    
+    // 处理接收到的数据
+    ESP32_ProcessReceivedData();
+    
+    // 每10秒发送一次完整的传感器数据
+    if(current_time - last_sensor_send >= 10000) {
+      ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
+      if(ESP32_SendJSON(json_buffer)) {
+        printf("定时发送传感器数据到ESP32\r\n");
+      }
+      last_sensor_send = current_time;
+    }
+    
+    // 每5秒发送一次控制状态更新
+    if(current_time - last_status_send >= 5000) {
+      ESP32_BuildControlJSON(json_buffer, sizeof(json_buffer));
+      if(ESP32_SendJSON(json_buffer)) {
+        printf("发送控制状态到ESP32\r\n");
+      }
+      last_status_send = current_time;
+    }
+    
+    // 每1秒检查一次
+    osDelay(1000);
+  }
+}
 
 /* USER CODE END Application */

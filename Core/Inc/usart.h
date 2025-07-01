@@ -29,18 +29,45 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdint.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
+// 添加USART3用于ESP32通信
+extern UART_HandleTypeDef huart3;
+
+// ESP32通信缓冲区大小
+#define ESP32_TX_BUFFER_SIZE 512
+#define ESP32_RX_BUFFER_SIZE 512
+
+// ESP32通信状态
+typedef enum {
+    ESP32_COMM_IDLE = 0,
+    ESP32_COMM_SENDING,
+    ESP32_COMM_RECEIVING,
+    ESP32_COMM_ERROR
+} ESP32_CommState_t;
 
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+// 添加USART3初始化函数
+void MX_USART3_UART_Init(void);
+
+// ESP32通信相关函数
+void ESP32_Init(void);
+bool ESP32_SendJSON(const char* json_string);
+bool ESP32_ReceiveJSON(char* json_buffer, uint16_t buffer_size);
+void ESP32_ProcessReceivedData(void);
+
+// JSON构建函数
+void ESP32_BuildSensorJSON(char* json_buffer, uint16_t buffer_size);
+void ESP32_BuildControlJSON(char* json_buffer, uint16_t buffer_size);
 
 /* USER CODE END Prototypes */
 

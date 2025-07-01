@@ -82,6 +82,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_USART3_UART_Init();
   MX_ADC1_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
@@ -133,9 +134,18 @@ int main(void)
   lv_init();
   lv_port_disp_init();  // LVGL显示驱动
   lv_port_indev_init(); // LVGL输入驱动
+
+
+  // 测试和esp32的串口通信
+  // while(1) {
+  //     const char* test_msg = "{\"device\":\"STM32_Test\",\"message\":\"Hello ESP32\"}\r\n";
+  //     HAL_UART_Transmit(&huart3, (uint8_t*)test_msg, strlen(test_msg), 1000);
+  //     printf("发送测试消息到ESP32\r\n");
+  //     HAL_Delay(3000);
+  // }
   
   
-  printf("启动FreeRTOS调度器...\r\n");
+  // 启动FreeRTOS调度器...
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
   /* Start scheduler */
