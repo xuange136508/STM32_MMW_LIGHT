@@ -47,12 +47,17 @@ extern volatile struct {
     uint8_t rgb_led_enabled;
 } g_control_state;
 
+// USART2接收相关变量
+static uint8_t usart2_rx_byte = 0;
+static volatile bool usart2_cmd_ready = false;
+
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private variables */
 UART_HandleTypeDef huart3;  // 添加USART3句柄
+UART_HandleTypeDef huart2;  // 添加USART2句柄
 /* USER CODE END Private variables */
 
 /* USART1 init function */
@@ -108,6 +113,29 @@ void MX_USART3_UART_Init(void)
 }
 /* USER CODE END USART3_Init */
 
+/* USER CODE BEGIN USART2_Init */
+/* USART2 init function - 用于数据接收 */
+void MX_USART2_UART_Init(void)
+{
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+  // 启动UART接收中断
+  HAL_UART_Receive_IT(&huart2, &usart2_rx_byte, 1);
+}
+/* USER CODE END USART2_Init */
+
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 {
 
@@ -162,6 +190,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   }
   /* USER CODE END USART3_MspInit */
+  else if(uartHandle->Instance==USART2)
+  {
+    /* USART2 clock enable */
+    __HAL_RCC_USART2_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    
+    /**USART2 GPIO Configuration
+    PA2     ------> USART2_TX
+    PA3     ------> USART2_RX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+  }
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
@@ -203,6 +252,20 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     HAL_NVIC_DisableIRQ(USART3_IRQn);
   }
   /* USER CODE END USART3_MspDeInit */
+  else if(uartHandle->Instance==USART2)
+  {
+    /* Peripheral clock disable */
+    __HAL_RCC_USART2_CLK_DISABLE();
+
+    /**USART2 GPIO Configuration
+    PA2     ------> USART2_TX
+    PA3     ------> USART2_RX
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2|GPIO_PIN_3);
+
+    /* USART2 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
+  }
 }
 
 /* USER CODE BEGIN 1 */
@@ -212,9 +275,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   */
 void ESP32_Init(void)
 {
-    // 初始化USART3
-    MX_USART3_UART_Init();
-    
     // 清空缓冲区
     memset(esp32_tx_buffer, 0, ESP32_TX_BUFFER_SIZE);
     memset(esp32_rx_buffer, 0, ESP32_RX_BUFFER_SIZE);
@@ -363,11 +423,131 @@ void ESP32_BuildControlJSON(char* json_buffer, uint16_t buffer_size)
 }
 
 /**
+  * @brief USART2通信初始化
+  */
+void USART2_Init(void)
+{
+    // 清空接收变量
+    usart2_rx_byte = 0;
+    usart2_cmd_ready = false;
+}
+
+/**
+  * @brief 获取USART2接收到的16进制命令
+  */
+bool USART2_GetReceivedData(char* buffer, uint16_t buffer_size)
+{
+    if (!usart2_cmd_ready || buffer == NULL) {
+        return false;
+    }
+    
+    // 将16进制数据转换为字符串格式
+    snprintf(buffer, buffer_size, "0x%02X", usart2_rx_byte);
+    
+    // 清空接收标志
+    usart2_cmd_ready = false;
+    
+    printf("USART2接收16进制命令: 0x%02X (%s)\r\n", usart2_rx_byte, USART2_GetCommandName(usart2_rx_byte));
+    return true;
+}
+
+/**
+  * @brief 处理USART2 16进制命令
+  */
+void USART2_ProcessHexCommand(uint8_t cmd)
+{
+    printf("处理命令: 0x%02X - %s\r\n", cmd, USART2_GetCommandName(cmd));
+    
+    switch(cmd) {
+        case CMD_WAKEUP_UNI:
+            printf("执行: 你好小盛\r\n");
+            // 在这里添加你好小盛的处理逻辑
+            break;
+            
+        case CMD_TURN_ON:
+            printf("执行: 打开夜灯\r\n");
+            // 在这里添加打开夜灯的处理逻辑
+            break;
+            
+        case CMD_TURN_OFF:
+            printf("执行: 关闭夜灯\r\n");
+            // 在这里添加关闭夜灯的处理逻辑
+            break;
+            
+        case CMD_CHAT_ON:
+            printf("执行: 开启聊天\r\n");
+            // 在这里添加开启聊天的处理逻辑
+            break;
+            
+        case CMD_CHAT_OFF:
+            printf("执行: 关闭聊天\r\n");
+            // 在这里添加关闭聊天的处理逻辑
+            break;
+            
+        case CMD_PLAY:
+            printf("执行: 播放胎教\r\n");
+            // 在这里添加播放胎教的处理逻辑
+            break;
+            
+        case CMD_PLAY_BG:
+            printf("执行: 播放白噪音\r\n");
+            // 在这里添加播放白噪音的处理逻辑
+            break;
+            
+        case CMD_PAUSE:
+            printf("执行: 暂停播放\r\n");
+            // 在这里添加暂停播放的处理逻辑
+            break;
+            
+        case CMD_STOP:
+            printf("执行: 停止播放\r\n");
+            // 在这里添加停止播放的处理逻辑
+            break;
+            
+        default:
+            printf("未知命令: 0x%02X\r\n", cmd);
+            break;
+    }
+}
+
+/**
+  * @brief 获取命令名称
+  */
+const char* USART2_GetCommandName(uint8_t cmd)
+{
+    switch(cmd) {
+        case CMD_WAKEUP_UNI: return "你好小盛";
+        case CMD_TURN_ON:    return "打开夜灯";
+        case CMD_TURN_OFF:   return "关闭夜灯";
+        case CMD_CHAT_ON:    return "开启聊天";
+        case CMD_CHAT_OFF:   return "关闭聊天";
+        case CMD_PLAY:       return "播放胎教";
+        case CMD_PLAY_BG:    return "播放白噪音";
+        case CMD_PAUSE:      return "暂停播放";
+        case CMD_STOP:       return "停止播放";
+        default:             return "未知命令";
+    }
+}
+
+/**
   * @brief UART接收完成中断回调函数
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == USART3) {
+    if (huart->Instance == USART2) {
+        // USART2 16进制命令接收处理
+        printf("USART2接收到16进制: 0x%02X\r\n", usart2_rx_byte);
+        
+        // 标记命令就绪
+        usart2_cmd_ready = true;
+        
+        // 立即处理命令
+        USART2_ProcessHexCommand(usart2_rx_byte);
+        
+        // 重新启动接收下一个字节
+        HAL_UART_Receive_IT(&huart2, &usart2_rx_byte, 1);
+    }
+    else if (huart->Instance == USART3) {
         // ESP32数据接收处理
         char received_char = esp32_rx_buffer[esp32_rx_index];
         
@@ -396,7 +576,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == USART3) {
+    if (huart->Instance == USART2) {
+        //printf("USART2通信错误\r\n");
+        
+        // 重置接收
+        usart2_rx_byte = 0;
+        usart2_cmd_ready = false;
+        HAL_UART_Receive_IT(&huart2, &usart2_rx_byte, 1);
+    }
+    else if (huart->Instance == USART3) {
         esp32_comm_state = ESP32_COMM_ERROR;
         // printf("ESP32通信错误\r\n");
         

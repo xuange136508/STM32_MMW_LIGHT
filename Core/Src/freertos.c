@@ -77,6 +77,7 @@ osThreadId dht11TaskHandle;
 osThreadId lcdDisplayTaskHandle;
 osThreadId lvglTaskHandle;
 osThreadId esp32CommTaskHandle;  // 添加ESP32通信任务句柄
+osThreadId usart2RxTaskHandle;   // 添加USART2接收任务句柄
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -91,6 +92,7 @@ void StartDHT11Task(void const * argument);
 void StartLcdDisplayTask(void const * argument);
 void StartLvglTask(void const * argument);
 void StartESP32CommTask(void const * argument);  
+void StartUSART2RxTask(void const * argument);  
 
 // LCD显示功能函数声明
 void LCD_DrawUI(void);
@@ -133,32 +135,36 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* rgb彩灯 */
-  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
-  /* led呼吸灯 */
-  osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
-  breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
+  // /* led呼吸灯 */
+  // osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
+  // breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   
-  /* 传感器监测 */
-  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
-  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  // /* 传感器监测 */
+  // osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
+  // sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
   
-  /* DHT11温湿度传感器 */
-  osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
-  dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
+  // /* DHT11温湿度传感器 */
+  // osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
+  // dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   
-  /* LCD显示 */
-  osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
-  lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
+  // /* LCD显示 */
+  // osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
+  // lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
   
-  /* ESP32通信 */
-  osThreadDef(esp32CommTask, StartESP32CommTask, osPriorityNormal, 0, 512);
-  esp32CommTaskHandle = osThreadCreate(osThread(esp32CommTask), NULL);
+  // /* ESP32通信 */
+  // osThreadDef(esp32CommTask, StartESP32CommTask, osPriorityNormal, 0, 512);
+  // esp32CommTaskHandle = osThreadCreate(osThread(esp32CommTask), NULL);
+  
+  /* USART2接收 */
+  osThreadDef(usart2RxTask, StartUSART2RxTask, osPriorityNormal, 0, 256);
+  usart2RxTaskHandle = osThreadCreate(osThread(usart2RxTask), NULL);
   
   /* LVGL任务 - 处理GUI更新和按钮事件 */
-  // osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
-  // lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
+  osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
+  lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -771,6 +777,37 @@ void StartESP32CommTask(void const * argument)
     
     // 每1秒检查一次
     osDelay(1000);
+  }
+}
+
+/**
+  * @brief USART2接收任务 - 专门处理USART2接收的数据
+  * @param argument: 任务参数
+  * @retval None
+  */
+void StartUSART2RxTask(void const * argument)
+{
+  // 等待系统初始化完成
+  osDelay(2000);
+  
+  // 初始化USART2
+  USART2_Init();
+  
+  printf("USART2 16进制命令接收任务启动\r\n");
+  
+  // 数据缓冲区（用于记录）
+  char cmd_buffer[32];
+  
+  for(;;)
+  {
+    // 检查是否有命令接收（虽然已经在中断中处理了，这里主要用于记录）
+    if(USART2_GetReceivedData(cmd_buffer, sizeof(cmd_buffer))) {
+      // 命令已经在中断中处理了，这里可以添加额外的日志记录
+      printf("USART2任务记录命令: %s\r\n", cmd_buffer);
+    }
+    
+    // 每500ms检查一次，因为命令已经在中断中立即处理
+    osDelay(500);
   }
 }
 
