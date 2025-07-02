@@ -423,6 +423,33 @@ void ESP32_BuildControlJSON(char* json_buffer, uint16_t buffer_size)
 }
 
 /**
+  * @brief 构建播放状态JSON
+  */
+void ESP32_BuildPlayStatusJSON(char* json_buffer, uint16_t buffer_size, const char* play_status, const char* content_type)
+{
+    snprintf(json_buffer, buffer_size,
+        "{"
+        "\"device\":\"STM32_PlayControl\","
+        "\"timestamp\":%lu,"
+        "\"playback\":{"
+            "\"status\":\"%s\","
+            "\"content_type\":\"%s\","
+            "\"command_source\":\"USART2\""
+        "},"
+        "\"controls\":{"
+            "\"breathing_led\":%s,"
+            "\"rgb_led\":%s"
+        "}"
+        "}",
+        HAL_GetTick(),
+        play_status,
+        content_type,
+        g_control_state.breathing_led_enabled ? "true" : "false",
+        g_control_state.rgb_led_enabled ? "true" : "false"
+    );
+}
+
+/**
   * @brief USART2通信初始化
   */
 void USART2_Init(void)
@@ -461,47 +488,53 @@ void USART2_ProcessHexCommand(uint8_t cmd)
     switch(cmd) {
         case CMD_WAKEUP_UNI:
             printf("执行: 你好小盛\r\n");
-            // 在这里添加你好小盛的处理逻辑
             break;
             
         case CMD_TURN_ON:
             printf("执行: 打开夜灯\r\n");
-            // 在这里添加打开夜灯的处理逻辑
+            *(uint8_t*)&g_control_state.breathing_led_enabled = 1;
+            *(uint8_t*)&g_control_state.rgb_led_enabled = 1;
             break;
             
         case CMD_TURN_OFF:
             printf("执行: 关闭夜灯\r\n");
-            // 在这里添加关闭夜灯的处理逻辑
+            *(uint8_t*)&g_control_state.breathing_led_enabled = 0;
+            *(uint8_t*)&g_control_state.rgb_led_enabled = 0;
             break;
-            
         case CMD_CHAT_ON:
             printf("执行: 开启聊天\r\n");
-            // 在这里添加开启聊天的处理逻辑
             break;
             
         case CMD_CHAT_OFF:
             printf("执行: 关闭聊天\r\n");
-            // 在这里添加关闭聊天的处理逻辑
             break;
             
         case CMD_PLAY:
             printf("执行: 播放胎教\r\n");
-            // 在这里添加播放胎教的处理逻辑
+            char json_buffer1[256];
+            ESP32_BuildPlayStatusJSON(json_buffer1, sizeof(json_buffer1), "play", "prenatal_education");
+            ESP32_SendJSON(json_buffer1);
             break;
             
         case CMD_PLAY_BG:
             printf("执行: 播放白噪音\r\n");
-            // 在这里添加播放白噪音的处理逻辑
+            char json_buffer2[256];
+            ESP32_BuildPlayStatusJSON(json_buffer2, sizeof(json_buffer2), "play", "white_noise");
+            ESP32_SendJSON(json_buffer2);
             break;
             
         case CMD_PAUSE:
             printf("执行: 暂停播放\r\n");
-            // 在这里添加暂停播放的处理逻辑
+            char json_buffer3[256];
+            ESP32_BuildPlayStatusJSON(json_buffer3, sizeof(json_buffer3), "pause", "unknown");
+            ESP32_SendJSON(json_buffer3);
             break;
             
         case CMD_STOP:
             printf("执行: 停止播放\r\n");
-            // 在这里添加停止播放的处理逻辑
+            char json_buffer4[256];
+            ESP32_BuildPlayStatusJSON(json_buffer4, sizeof(json_buffer4), "stop", "unknown");
+            ESP32_SendJSON(json_buffer4);
             break;
             
         default:

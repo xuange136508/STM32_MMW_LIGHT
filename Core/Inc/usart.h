@@ -88,6 +88,7 @@ void ESP32_ProcessReceivedData(void);
 // JSON构建函数
 void ESP32_BuildSensorJSON(char* json_buffer, uint16_t buffer_size);
 void ESP32_BuildControlJSON(char* json_buffer, uint16_t buffer_size);
+void ESP32_BuildPlayStatusJSON(char* json_buffer, uint16_t buffer_size, const char* play_status, const char* content_type);
 
 // USART2接收相关函数
 void USART2_Init(void);

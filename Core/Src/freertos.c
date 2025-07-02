@@ -57,7 +57,7 @@ typedef struct {
 
 // 全局变量
 volatile SensorData_t g_sensor_data = {0};
-volatile ControlState_t g_control_state = {1, 1}; // 默认都开启
+volatile ControlState_t g_control_state = {0, 0}; // 默认都关闭
 
 // 按钮区域定义
 #define BTN_WIDTH 90
@@ -135,36 +135,36 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* rgb彩灯 */
-  // osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
-  // rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
+  osThreadDef(rgbLedTask, StartRgbLedTask, osPriorityLow, 0, 256);
+  rgbLedTaskHandle = osThreadCreate(osThread(rgbLedTask), NULL);
   
-  // /* led呼吸灯 */
-  // osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
-  // breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
+  /* led呼吸灯 */
+  osThreadDef(breathingLedTask, StartBreathingLedTask, osPriorityNormal, 0, 256);
+  breathingLedTaskHandle = osThreadCreate(osThread(breathingLedTask), NULL);
   
-  // /* 传感器监测 */
-  // osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
-  // sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
+  /* 传感器监测 */
+  osThreadDef(sensorTask, StartSensorTask, osPriorityNormal, 0, 256);
+  sensorTaskHandle = osThreadCreate(osThread(sensorTask), NULL);
   
-  // /* DHT11温湿度传感器 */
-  // osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
-  // dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
+  /* DHT11温湿度传感器 */
+  osThreadDef(dht11Task, StartDHT11Task, osPriorityLow, 0, 512);
+  dht11TaskHandle = osThreadCreate(osThread(dht11Task), NULL);
   
-  // /* LCD显示 */
-  // osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
-  // lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
+  /* LCD显示 */
+  osThreadDef(lcdDisplayTask, StartLcdDisplayTask, osPriorityNormal, 0, 512);
+  lcdDisplayTaskHandle = osThreadCreate(osThread(lcdDisplayTask), NULL);
   
-  // /* ESP32通信 */
-  // osThreadDef(esp32CommTask, StartESP32CommTask, osPriorityNormal, 0, 512);
-  // esp32CommTaskHandle = osThreadCreate(osThread(esp32CommTask), NULL);
+  /* ESP32通信 */
+  osThreadDef(esp32CommTask, StartESP32CommTask, osPriorityNormal, 0, 512);
+  esp32CommTaskHandle = osThreadCreate(osThread(esp32CommTask), NULL);
   
   /* USART2接收 */
   osThreadDef(usart2RxTask, StartUSART2RxTask, osPriorityNormal, 0, 256);
   usart2RxTaskHandle = osThreadCreate(osThread(usart2RxTask), NULL);
   
   /* LVGL任务 - 处理GUI更新和按钮事件 */
-  osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
-  lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
+  // osThreadDef(lvglTask, StartLvglTask, osPriorityNormal, 0, 1024);
+  // lvglTaskHandle = osThreadCreate(osThread(lvglTask), NULL);
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -195,47 +195,41 @@ void StartDefaultTask(void const * argument)
   */
 void StartRgbLedTask(void const * argument)
 {
-  printf("WS2812B RGB LED Task started\r\n");
-  
-  // 初始化WS2812B RGB彩灯
   WS2812B_Init();
   printf("WS2812B 初始化完成\r\n");
   
-  // 基础颜色测试
-  printf("设置LED颜色: LED0=红色, LED1=绿色\r\n");
-  WS2812B_SetColorEnum(0, WS2812B_RED);
-  WS2812B_SetColorEnum(1, WS2812B_GREEN);
-  WS2812B_Update();
-  osDelay(2000);
+  // // 基础颜色测试
+  // printf("设置LED颜色: LED0=红色, LED1=绿色\r\n");
+  // WS2812B_SetColorEnum(0, WS2812B_RED);
+  // WS2812B_SetColorEnum(1, WS2812B_GREEN);
+  // WS2812B_Update();
+  // osDelay(2000);
   
-  // 测试多种颜色
-  printf("开始颜色循环测试...\r\n");
+  // // 测试多种颜色
+  // printf("开始颜色循环测试...\r\n");
   WS2812B_ColorEnum_t test_colors[] = {
     WS2812B_RED, WS2812B_GREEN, WS2812B_BLUE, WS2812B_YELLOW,
     WS2812B_MAGENTA, WS2812B_CYAN, WS2812B_WHITE, WS2812B_ORANGE
   };
   
-  for(int cycle = 0; cycle < 2; cycle++) {
-    for(int i = 0; i < 8; i++) {
-      WS2812B_SetColorEnum(0, test_colors[i]);
-      WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
-      WS2812B_Update();
-      // printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
-      osDelay(500);
-    }
-  }
+  // for(int cycle = 0; cycle < 2; cycle++) {
+  //   for(int i = 0; i < 8; i++) {
+  //     WS2812B_SetColorEnum(0, test_colors[i]);
+  //     WS2812B_SetColorEnum(1, test_colors[(i+1)%8]);
+  //     WS2812B_Update();
+  //     // printf("颜色 %d: LED0=%d, LED1=%d\r\n", i, test_colors[i], test_colors[(i+1)%8]);
+  //     osDelay(500);
+  //   }
+  // }
   
-  // 彩虹效果测试
-  printf("彩虹效果测试...\r\n");
-  WS2812B_Test_Rainbow();
+  // // 彩虹效果测试
+  // printf("彩虹效果测试...\r\n");
+  // WS2812B_Test_Rainbow();
   
-  // 呼吸灯效果测试
-  printf("呼吸灯效果测试...\r\n");
-  WS2812B_Test_Breathing();
+  // // 呼吸灯效果测试
+  // printf("呼吸灯效果测试...\r\n");
+  // WS2812B_Test_Breathing();
   
-  printf("WS2812B 初始测试完成!\r\n");
-  
-  // 无限循环 - 持续的RGB效果
   for(;;)
   {
     if(g_control_state.rgb_led_enabled) {
@@ -280,7 +274,7 @@ void StartBreathingLedTask(void const * argument)
   // 呼吸灯参数
   float breath_phase = 0.0f;
   const float breath_speed = 0.12f;  // 呼吸速度
-  const uint32_t max_brightness = 50; // 最大亮度 (0-999)
+  const uint32_t max_brightness = 150; // 最大亮度 (0-999)
   const uint32_t min_brightness = 10;  // 最小亮度
   
   for(;;)
@@ -443,8 +437,6 @@ void StartDHT11Task(void const * argument)
   */
 void StartLcdDisplayTask(void const * argument)
 {
-  printf("LCD显示任务启动\r\n");
-  
   // 等待系统初始化完成
   osDelay(2000);
   
@@ -735,45 +727,43 @@ static void btn_event_cb(lv_event_t * e)
 void StartESP32CommTask(void const * argument)
 {
   // 等待系统初始化完成
-  osDelay(3000);
+  osDelay(2000);
   
   // 初始化ESP32通信
   ESP32_Init();
   
-  // JSON缓冲区
-  char json_buffer[512];
+  // char json_buffer[512];
+  // // 发送初始状态
+  // ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
+  // ESP32_SendJSON(json_buffer);
   
-  // 发送初始状态
-  ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
-  ESP32_SendJSON(json_buffer);
-  
-  uint32_t last_sensor_send = HAL_GetTick();
-  uint32_t last_status_send = HAL_GetTick();
+  // uint32_t last_sensor_send = HAL_GetTick();
+  // uint32_t last_status_send = HAL_GetTick();
   
   for(;;)
   {
-    uint32_t current_time = HAL_GetTick();
+  //   uint32_t current_time = HAL_GetTick();
     
-    // 处理接收到的数据
-    ESP32_ProcessReceivedData();
+  //   // 处理接收到的数据
+  //   ESP32_ProcessReceivedData();
     
-    // 每10秒发送一次完整的传感器数据
-    if(current_time - last_sensor_send >= 10000) {
-      ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
-      if(ESP32_SendJSON(json_buffer)) {
-        printf("定时发送传感器数据到ESP32\r\n");
-      }
-      last_sensor_send = current_time;
-    }
+  //   // 每10秒发送一次完整的传感器数据
+  //   if(current_time - last_sensor_send >= 10000) {
+  //     ESP32_BuildSensorJSON(json_buffer, sizeof(json_buffer));
+  //     if(ESP32_SendJSON(json_buffer)) {
+  //       printf("定时发送传感器数据到ESP32\r\n");
+  //     }
+  //     last_sensor_send = current_time;
+  //   }
     
-    // 每5秒发送一次控制状态更新
-    if(current_time - last_status_send >= 5000) {
-      ESP32_BuildControlJSON(json_buffer, sizeof(json_buffer));
-      if(ESP32_SendJSON(json_buffer)) {
-        printf("发送控制状态到ESP32\r\n");
-      }
-      last_status_send = current_time;
-    }
+  //   // 每5秒发送一次控制状态更新
+  //   if(current_time - last_status_send >= 5000) {
+  //     ESP32_BuildControlJSON(json_buffer, sizeof(json_buffer));
+  //     if(ESP32_SendJSON(json_buffer)) {
+  //       printf("发送控制状态到ESP32\r\n");
+  //     }
+  //     last_status_send = current_time;
+  //   }
     
     // 每1秒检查一次
     osDelay(1000);
@@ -787,26 +777,16 @@ void StartESP32CommTask(void const * argument)
   */
 void StartUSART2RxTask(void const * argument)
 {
-  // 等待系统初始化完成
   osDelay(2000);
-  
-  // 初始化USART2
   USART2_Init();
-  
   printf("USART2 16进制命令接收任务启动\r\n");
   
-  // 数据缓冲区（用于记录）
   char cmd_buffer[32];
-  
   for(;;)
   {
-    // 检查是否有命令接收（虽然已经在中断中处理了，这里主要用于记录）
     if(USART2_GetReceivedData(cmd_buffer, sizeof(cmd_buffer))) {
-      // 命令已经在中断中处理了，这里可以添加额外的日志记录
       printf("USART2任务记录命令: %s\r\n", cmd_buffer);
     }
-    
-    // 每500ms检查一次，因为命令已经在中断中立即处理
     osDelay(500);
   }
 }

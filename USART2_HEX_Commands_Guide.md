@@ -12,17 +12,17 @@
 
 ## 支持的16进制命令
 
-| 16进制命令 | 功能描述   | 中文说明     |
-|-----------|-----------|-------------|
-| 0xAA      | wakeup_uni | 你好小盛     |
-| 0xA3      | TurnOn     | 打开夜灯     |
-| 0xA4      | TurnOff    | 关闭夜灯     |
+| 16进制命令 | 功能描述   | 中文说明     | 实际功能 |
+|-----------|-----------|-------------|----------|
+| 0xAA      | wakeup_uni | 你好小盛     | 系统唤醒 |
+| 0xA3      | TurnOn     | 打开夜灯     | **开启呼吸灯** |
+| 0xA4      | TurnOff    | 关闭夜灯     | **关闭呼吸灯** |
 | 0xA1      | chatOn     | 开启聊天     |
 | 0xA2      | chatOff    | 关闭聊天     |
-| 0xA5      | play       | 播放胎教     |
-| 0xA6      | play_background | 播放白噪音 |
-| 0xA7      | pause      | 暂停播放     |
-| 0xA8      | stop       | 停止播放     |
+| 0xA5      | play       | 播放胎教     | **发送播放状态到ESP32** |
+| 0xA6      | play_background | 播放白噪音 | **发送播放状态到ESP32** |
+| 0xA7      | pause      | 暂停播放     | **发送暂停状态到ESP32** |
+| 0xA8      | stop       | 停止播放     | **发送停止状态到ESP32** |
 
 ## 工作原理
 
@@ -30,9 +30,66 @@
 2. **实时处理**: 不需要等待换行符，收到命令立即解析执行
 3. **自动识别**: 根据16进制值自动匹配对应的功能
 4. **错误处理**: 未知命令会输出警告信息
+5. **ESP32通信**: 播放相关命令会自动发送状态到ESP32
+
+## ESP32播放状态JSON格式
+
+当接收到播放相关命令时，会自动生成并发送JSON状态到ESP32：
+
+### 播放胎教 (0xA5)
+```json
+{
+  "device": "STM32_PlayControl",
+  "timestamp": 12345678,
+  "playback": {
+    "status": "play",
+    "content_type": "prenatal_education",
+    "command_source": "USART2"
+  },
+  "controls": {
+    "breathing_led": true,
+    "rgb_led": false
+  }
+}
+```
+
+### 播放白噪音 (0xA6)
+```json
+{
+  "device": "STM32_PlayControl",
+  "timestamp": 12345678,
+  "playback": {
+    "status": "play",
+    "content_type": "white_noise",
+    "command_source": "USART2"
+  },
+  "controls": {
+    "breathing_led": true,
+    "rgb_led": false
+  }
+}
+```
+
+### 暂停/停止播放 (0xA7/0xA8)
+```json
+{
+  "device": "STM32_PlayControl",
+  "timestamp": 12345678,
+  "playback": {
+    "status": "pause", // 或 "stop"
+    "content_type": "unknown",
+    "command_source": "USART2"
+  },
+  "controls": {
+    "breathing_led": true,
+    "rgb_led": false
+  }
+}
+```
 
 ## 调试输出示例
 
+### 控制命令 (0xA3)
 当接收到0xA3命令时，串口1会输出：
 
 ```
@@ -41,6 +98,19 @@ USART2接收到16进制: 0xA3
 执行: 打开夜灯
 USART2接收16进制命令: 0xA3 (打开夜灯)
 USART2任务记录命令: 0xA3
+```
+
+### 播放命令 (0xA5)
+当接收到0xA5命令时，串口1会输出：
+
+```
+USART2接收到16进制: 0xA5
+处理命令: 0xA5 - 播放胎教
+执行: 播放胎教
+ESP32发送JSON: {"device":"STM32_PlayControl","timestamp":12345678...}
+已发送播放胎教状态到ESP32
+USART2接收16进制命令: 0xA5 (播放胎教)
+USART2任务记录命令: 0xA5
 ```
 
 ## 使用方法
@@ -82,6 +152,16 @@ const char* USART2_GetCommandName(uint8_t cmd);
 ### 初始化函数
 ```c
 void USART2_Init(void);
+```
+
+### ESP32通信函数
+```c
+// 构建播放状态JSON
+void ESP32_BuildPlayStatusJSON(char* json_buffer, uint16_t buffer_size, 
+                               const char* play_status, const char* content_type);
+
+// 发送JSON到ESP32
+bool ESP32_SendJSON(const char* json_string);
 ```
 
 ## 特性
