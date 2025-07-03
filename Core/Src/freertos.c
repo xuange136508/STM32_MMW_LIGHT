@@ -742,10 +742,10 @@ void StartESP32CommTask(void const * argument)
   
   for(;;)
   {
-  //   uint32_t current_time = HAL_GetTick();
+    // uint32_t current_time = HAL_GetTick();
     
-  //   // 处理接收到的数据
-  //   ESP32_ProcessReceivedData();
+    // 处理接收到的数据
+    ESP32_ProcessReceivedData();
     
   //   // 每10秒发送一次完整的传感器数据
   //   if(current_time - last_sensor_send >= 10000) {
@@ -765,8 +765,8 @@ void StartESP32CommTask(void const * argument)
   //     last_status_send = current_time;
   //   }
     
-    // 每1秒检查一次
-    osDelay(1000);
+    // 每100ms检查一次
+    osDelay(100);
   }
 }
 

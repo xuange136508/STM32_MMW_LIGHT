@@ -583,12 +583,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     else if (huart->Instance == USART3) {
         // ESP32数据接收处理
         char received_char = esp32_rx_buffer[esp32_rx_index];
-        
         if (received_char == '\n' || received_char == '\r') {
             // 接收完成
             esp32_rx_buffer[esp32_rx_index] = '\0';
             esp32_data_ready = true;
             esp32_comm_state = ESP32_COMM_IDLE;
+            // 重置索引
+            esp32_rx_index = 0;
+
         } else {
             // 继续接收
             esp32_rx_index++;
