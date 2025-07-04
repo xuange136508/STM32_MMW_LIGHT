@@ -356,7 +356,7 @@ void StartSensorTask(void const * argument)
            (touch == GPIO_PIN_SET) ? " «" : "∑Ò");
     
     // —” ±5√Î
-    osDelay(5000);
+    osDelay(500);
   }
 }
 

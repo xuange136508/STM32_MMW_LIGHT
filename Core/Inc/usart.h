@@ -60,6 +60,28 @@ extern UART_HandleTypeDef huart2;
 #define CMD_PAUSE         0xA7    // 暂停播放
 #define CMD_STOP          0xA8    // 停止播放
 
+// B系列命令（屏幕和音频控制）
+#define CMD_SCREEN_OFF    0xB1    // 关闭屏幕
+#define CMD_SCREEN_ON     0xB2    // 亮屏
+#define CMD_LIGHT_UP      0xB3    // 夜灯调亮
+#define CMD_LIGHT_DOWN    0xB4    // 夜灯调暗
+#define CMD_MUTE          0xB5    // 静音
+#define CMD_UNMUTE        0xB6    // 取消静音
+#define CMD_VOL_UP        0xB7    // 声音调大
+#define CMD_VOL_DOWN      0xB8    // 声音调小
+#define CMD_VOL_MAX       0xB9    // 声音调到最大
+
+// C系列命令（时间和记录控制）
+#define CMD_TIMER_STOP    0xC1    // 定时停止
+#define CMD_PREV_SONG     0xC2    // 上一首
+#define CMD_NEXT_SONG     0xC3    // 下一首
+#define CMD_START_FETAL   0xC4    // 开始记胎动
+#define CMD_START_RECORD  0xC5    // 开始记录
+#define CMD_START_SLEEP   0xC6    // 开始记录宝睡眠
+#define CMD_END_FETAL     0xC7    // 结束记胎动
+#define CMD_END_RECORD    0xC8    // 结束记录
+#define CMD_END_SLEEP     0xC9    // 结束记录宝睡眠
+
 // ESP32通信状态
 typedef enum {
     ESP32_COMM_IDLE = 0,

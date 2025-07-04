@@ -19,6 +19,7 @@
         "lvgl_demo.h": "c",
         "lvgl.h": "c",
         "lv_port_disp_template.h": "c",
-        "lv_port_indev_template.h": "c"
+        "lv_port_indev_template.h": "c",
+        "dma.h": "c"
     }
 }

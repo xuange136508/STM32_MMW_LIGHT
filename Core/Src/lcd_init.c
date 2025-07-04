@@ -2,23 +2,75 @@
 #include "delay.h"
 #include "spi.h"
 
+/* DMA transmission complete flag */
+volatile uint8_t spi_dma_tx_complete = 1;
+
 /******************************************************************************
-      函数说明：LCD串行数据写入函数
+      函数说明：LCD串行数据写入函数（DMA方式）
       入口数据：dat  要写入的串行数据
       返回值：  无
 ******************************************************************************/
 void LCD_Writ_Bus(uint8_t dat) 
 {    
-	
-	LCD_CS_Clr();
-    // 使用HAL库的SPI发送函数
-    HAL_SPI_Transmit(&hspi1, &dat, 1, 1000);
-	//HAL_SPI_Transmit_DMA(&hspi1, &dat, 1); // 注意这里DMA的方式驱动，注释掉就点亮屏幕了
+// 【没有dma之前的代码】
+// 	LCD_CS_Clr();
+//    // 使用HAL库的SPI发送函数
+//     HAL_SPI_Transmit(&hspi1, &dat, 1, 1000);
+// 	//HAL_SPI_Transmit_DMA(&hspi1, &dat, 1); // 注意这里DMA的方式驱动，注释掉就点亮屏幕了
+// 	//	delay_us(1);
+// 	//    while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+//     // 等待传输完成（HAL_SPI_Transmit已经包含等待）
+// 	LCD_CS_Set();
 
-//	delay_us(1);
-//    while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-    // 等待传输完成（HAL_SPI_Transmit已经包含等待）
+	LCD_CS_Clr();
+    
+    // 使用DMA发送数据
+    spi_dma_tx_complete = 0;
+    if(HAL_SPI_Transmit_DMA(&hspi1, &dat, 1) != HAL_OK)
+    {
+        // 如果DMA传输失败，回退到阻塞方式
+        HAL_SPI_Transmit(&hspi1, &dat, 1, 1000);
+        spi_dma_tx_complete = 1;
+    }
+    else
+    {
+        // 等待DMA传输完成
+        while(spi_dma_tx_complete == 0)
+        {
+            // 可以在这里添加超时检查
+        }
+    }
+    
 	LCD_CS_Set();
+}
+
+/******************************************************************************
+      函数说明：LCD DMA 批量数据写入函数
+      入口数据：pData 数据指针，Size 数据长度
+      返回值：  无
+******************************************************************************/
+void LCD_Writ_Bus_DMA(uint8_t *pData, uint16_t Size)
+{
+    LCD_CS_Clr();
+    
+    // 使用DMA发送数据
+    spi_dma_tx_complete = 0;
+    if(HAL_SPI_Transmit_DMA(&hspi1, pData, Size) != HAL_OK)
+    {
+        // 如果DMA传输失败，回退到阻塞方式
+        HAL_SPI_Transmit(&hspi1, pData, Size, 1000);
+        spi_dma_tx_complete = 1;
+    }
+    else
+    {
+        // 等待DMA传输完成
+        while(spi_dma_tx_complete == 0)
+        {
+            // 可以在这里添加超时检查
+        }
+    }
+    
+    LCD_CS_Set();
 }
 
 /******************************************************************************
@@ -198,6 +250,32 @@ void LCD_Init(void)
 
 	LCD_WR_REG(0x29);
 } 
+
+/******************************************************************************
+      函数说明：SPI DMA传输完成回调函数
+      入口数据：hspi SPI句柄指针
+      返回值：  无
+******************************************************************************/
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPI1)
+    {
+        spi_dma_tx_complete = 1;  // 设置传输完成标志
+    }
+}
+
+/******************************************************************************
+      函数说明：SPI DMA传输错误回调函数
+      入口数据：hspi SPI句柄指针
+      返回值：  无
+******************************************************************************/
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPI1)
+    {
+        spi_dma_tx_complete = 1;  // 错误时也设置完成标志，避免死锁
+    }
+}
 
 
 

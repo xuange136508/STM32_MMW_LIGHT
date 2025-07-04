@@ -281,6 +281,9 @@ void ESP32_Init(void)
     esp32_rx_index = 0;
     esp32_comm_state = ESP32_COMM_IDLE;
     esp32_data_ready = false;
+    
+    // 启动UART中断接收
+    HAL_UART_Receive_IT(&huart3, (uint8_t*)&esp32_rx_buffer[0], 1);
 }
 
 /**
@@ -457,6 +460,9 @@ void USART2_Init(void)
     // 清空接收变量
     usart2_rx_byte = 0;
     usart2_cmd_ready = false;
+    
+    // 启动UART中断接收
+    HAL_UART_Receive_IT(&huart2, &usart2_rx_byte, 1);
 }
 
 /**
@@ -537,6 +543,80 @@ void USART2_ProcessHexCommand(uint8_t cmd)
             ESP32_SendJSON(json_buffer4);
             break;
             
+        // B系列命令（屏幕和音频控制）
+        case CMD_SCREEN_OFF:
+            printf("执行: 关闭屏幕\r\n");
+            break;
+            
+        case CMD_SCREEN_ON:
+            printf("执行: 亮屏\r\n");
+            break;
+            
+        case CMD_LIGHT_UP:
+            printf("执行: 夜灯调亮\r\n");
+            break;
+            
+        case CMD_LIGHT_DOWN:
+            printf("执行: 夜灯调暗\r\n");
+            break;
+            
+        case CMD_MUTE:
+            printf("执行: 静音\r\n");
+            break;
+            
+        case CMD_UNMUTE:
+            printf("执行: 取消静音\r\n");
+            break;
+            
+        case CMD_VOL_UP:
+            printf("执行: 声音调大\r\n");
+            break;
+            
+        case CMD_VOL_DOWN:
+            printf("执行: 声音调小\r\n");
+            break;
+            
+        case CMD_VOL_MAX:
+            printf("执行: 声音调到最大\r\n");
+            break;
+            
+        // C系列命令（时间和记录控制）
+        case CMD_TIMER_STOP:
+            printf("执行: 定时停止\r\n");
+            break;
+            
+        case CMD_PREV_SONG:
+            printf("执行: 上一首\r\n");
+            break;
+            
+        case CMD_NEXT_SONG:
+            printf("执行: 下一首\r\n");
+            break;
+            
+        case CMD_START_FETAL:
+            printf("执行: 开始记胎动\r\n");
+            break;
+            
+        case CMD_START_RECORD:
+            printf("执行: 开始记录\r\n");
+            break;
+            
+        case CMD_START_SLEEP:
+            printf("执行: 开始记录宝睡眠\r\n");
+            break;
+            
+        case CMD_END_FETAL:
+            printf("执行: 结束记胎动\r\n");
+            break;
+            
+        case CMD_END_RECORD:
+            printf("执行: 结束记录\r\n");
+            break;
+            
+        case CMD_END_SLEEP:
+            printf("执行: 结束记录宝睡眠\r\n");
+            break;
+            
         default:
             printf("未知命令: 0x%02X\r\n", cmd);
             break;
@@ -558,6 +638,29 @@ const char* USART2_GetCommandName(uint8_t cmd)
         case CMD_PLAY_BG:    return "播放白噪音";
         case CMD_PAUSE:      return "暂停播放";
         case CMD_STOP:       return "停止播放";
+        
+        // B系列命令
+        case CMD_SCREEN_OFF: return "关闭屏幕";
+        case CMD_SCREEN_ON:  return "亮屏";
+        case CMD_LIGHT_UP:   return "夜灯调亮";
+        case CMD_LIGHT_DOWN: return "夜灯调暗";
+        case CMD_MUTE:       return "静音";
+        case CMD_UNMUTE:     return "取消静音";
+        case CMD_VOL_UP:     return "声音调大";
+        case CMD_VOL_DOWN:   return "声音调小";
+        case CMD_VOL_MAX:    return "声音调到最大";
+        
+        // C系列命令
+        case CMD_TIMER_STOP: return "定时停止";
+        case CMD_PREV_SONG:  return "上一首";
+        case CMD_NEXT_SONG:  return "下一首";
+        case CMD_START_FETAL:return "开始记胎动";
+        case CMD_START_RECORD:return "开始记录";
+        case CMD_START_SLEEP:return "开始记录宝睡眠";
+        case CMD_END_FETAL:  return "结束记胎动";
+        case CMD_END_RECORD: return "结束记录";
+        case CMD_END_SLEEP:  return "结束记录宝睡眠";
+        
         default:             return "未知命令";
     }
 }

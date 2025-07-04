@@ -13,7 +13,7 @@ static uint8_t global_brightness = 255;
 static void WS2812B_GPIO_Init(void);
 static void WS2812B_DMA_Init(void);
 static void WS2812B_TIM4_Init(void);
-static void WS2812B_FillBuffer(void);
+static void WS2812B_FillBuffer(void); // 填充PWM缓冲区
 
 /**
  * @brief 初始化WS2812B (包含GPIO, TIM4, DMA初始化)
@@ -43,15 +43,15 @@ void WS2812B_Init(void)
  */
 static void WS2812B_GPIO_Init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    // GPIO_InitTypeDef GPIO_InitStruct = {0};
     
-    // 配置PD13为TIM4_CH2复用功能
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    // // 配置PD13为TIM4_CH2复用功能
+    // GPIO_InitStruct.Pin = GPIO_PIN_13;
+    // GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    // GPIO_InitStruct.Pull = GPIO_NOPULL;
+    // GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    // GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
+    // HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 }
 
 /**
@@ -59,28 +59,28 @@ static void WS2812B_GPIO_Init(void)
  */
 static void WS2812B_DMA_Init(void)
 {
-    // DMA配置
-    hdma_tim4_ch2.Instance = DMA1_Stream3;
-    hdma_tim4_ch2.Init.Channel = DMA_CHANNEL_2;
-    hdma_tim4_ch2.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    hdma_tim4_ch2.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_tim4_ch2.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_tim4_ch2.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_tim4_ch2.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_tim4_ch2.Init.Mode = DMA_NORMAL;
-    hdma_tim4_ch2.Init.Priority = DMA_PRIORITY_HIGH;
-    hdma_tim4_ch2.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    // // DMA配置
+    // hdma_tim4_ch2.Instance = DMA1_Stream3;
+    // hdma_tim4_ch2.Init.Channel = DMA_CHANNEL_2;
+    // hdma_tim4_ch2.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    // hdma_tim4_ch2.Init.PeriphInc = DMA_PINC_DISABLE;
+    // hdma_tim4_ch2.Init.MemInc = DMA_MINC_ENABLE;
+    // hdma_tim4_ch2.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    // hdma_tim4_ch2.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    // hdma_tim4_ch2.Init.Mode = DMA_NORMAL;
+    // hdma_tim4_ch2.Init.Priority = DMA_PRIORITY_HIGH;
+    // hdma_tim4_ch2.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     
-    if (HAL_DMA_Init(&hdma_tim4_ch2) != HAL_OK) {
-        Error_Handler();
-    }
+    // if (HAL_DMA_Init(&hdma_tim4_ch2) != HAL_OK) {
+    //     Error_Handler();
+    // }
     
-    // 链接DMA到TIM4
-    __HAL_LINKDMA(&htim4, hdma[TIM_DMA_ID_CC2], hdma_tim4_ch2);
+    // // 链接DMA到TIM4
+    // __HAL_LINKDMA(&htim4, hdma[TIM_DMA_ID_CC2], hdma_tim4_ch2);
     
-    // DMA中断配置
-    HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+    // // DMA中断配置
+    // HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+    // HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
 }
 
 /**
@@ -88,48 +88,48 @@ static void WS2812B_DMA_Init(void)
  */
 static void WS2812B_TIM4_Init(void)
 {
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
-    TIM_OC_InitTypeDef sConfigOC = {0};
+    // TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    // TIM_MasterConfigTypeDef sMasterConfig = {0};
+    // TIM_OC_InitTypeDef sConfigOC = {0};
 
-    // TIM4基本配置
-    htim4.Instance = TIM4;
-    htim4.Init.Prescaler = 0;                           // 不分频，84MHz
-    htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim4.Init.Period = WS2812B_TIMER_PERIOD;           // ARR = 104, 周期1.25us
-    htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    // // TIM4基本配置
+    // htim4.Instance = TIM4;
+    // htim4.Init.Prescaler = 0;                           // 不分频，84MHz
+    // htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+    // htim4.Init.Period = WS2812B_TIMER_PERIOD;           // ARR = 104, 周期1.25us
+    // htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    // htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     
-    if (HAL_TIM_Base_Init(&htim4) != HAL_OK) {
-        Error_Handler();
-    }
+    // if (HAL_TIM_Base_Init(&htim4) != HAL_OK) {
+    //     Error_Handler();
+    // }
     
-    // 时钟源配置
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK) {
-        Error_Handler();
-    }
+    // // 时钟源配置
+    // sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    // if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK) {
+    //     Error_Handler();
+    // }
     
-    // PWM初始化
-    if (HAL_TIM_PWM_Init(&htim4) != HAL_OK) {
-        Error_Handler();
-    }
+    // // PWM初始化
+    // if (HAL_TIM_PWM_Init(&htim4) != HAL_OK) {
+    //     Error_Handler();
+    // }
     
-    // Master配置
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK) {
-        Error_Handler();
-    }
+    // // Master配置
+    // sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    // sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    // if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK) {
+    //     Error_Handler();
+    // }
     
-    // PWM通道2配置
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = 0;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
-        Error_Handler();
-    }
+    // // PWM通道2配置
+    // sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    // sConfigOC.Pulse = 0;
+    // sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    // sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    // if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
+    //     Error_Handler();
+    // }
 }
 
 /**

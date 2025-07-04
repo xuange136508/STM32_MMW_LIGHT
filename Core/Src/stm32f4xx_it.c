@@ -63,6 +63,7 @@ extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_tim4_ch2;
 extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim1;
+extern DMA_HandleTypeDef hdma_spi1_tx;
 
 /* USER CODE BEGIN EV */
 extern UART_HandleTypeDef huart3;  // 添加USART3句柄声明
@@ -196,6 +197,20 @@ void DMA1_Stream3_IRQHandler(void)
 {
   // 这是 HAL 库的通用DMA中断处理函数，它会检查中断源并调用回调函数
   HAL_DMA_IRQHandler(&hdma_tim4_ch2); // 使用正确的DMA句柄
+}
+
+/**
+  * @brief This function handles DMA2 stream3 global interrupt.
+  */
+void DMA2_Stream3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Stream3_IRQn 0 */
+
+  /* USER CODE END DMA2_Stream3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_spi1_tx);
+  /* USER CODE BEGIN DMA2_Stream3_IRQn 1 */
+
+  /* USER CODE END DMA2_Stream3_IRQn 1 */
 }
 
 /**

@@ -19,11 +19,6 @@
 ******************************************************************************/
 void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16_t color)
 {          
-    uint16_t color_buf[1] = {color};
-    uint32_t num = (xend - xsta) * (yend - ysta);
-    uint32_t chunk_size;
-    uint8_t first_chunk = 1;
-    
     LCD_Address_Set(xsta, ysta, xend, yend); // 设置显示范围
     
 	// 准备颜色数据 (高位在前)
@@ -32,27 +27,74 @@ void LCD_Fill(uint16_t xsta, uint16_t ysta, uint16_t xend, uint16_t yend, uint16
 
 	uint32_t pixelCount = (xend - xsta + 1) * (yend - ysta + 1);
 	
+    // 使用静态缓冲区进行DMA批量传输
+    #define DMA_BUFFER_SIZE 512  // 可根据RAM大小调整
+    static uint8_t dma_buffer[DMA_BUFFER_SIZE];
+    
+    // 填充缓冲区模式(每个像素2字节)
+    uint32_t pixels_per_buffer = DMA_BUFFER_SIZE / 2;
+    
+    // 预填充缓冲区
+    for(uint32_t i = 0; i < pixels_per_buffer && i * 2 + 1 < DMA_BUFFER_SIZE; i++) {
+        dma_buffer[i * 2] = colorHi;
+        dma_buffer[i * 2 + 1] = colorLo;
+    }
+    
     LCD_CS_Clr();
 	LCD_DC_Set();
-//	while(num > 0)
-//    {
-//        chunk_size = (num > 65534) ? 65534 : num;
-//        
-//        // 配置DMA传输
-////        HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*)color_buf, chunk_size);
-////        
-////        // 等待DMA传输完成
-////        while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-
-//		LCD_WR_DATA_Bulk((uint16_t*)color_buf,chunk_size);
-//        
-//        num -= chunk_size;
-//    }
-    for(uint32_t i = 0; i < pixelCount*2; i++) {
-        HAL_SPI_Transmit(&hspi1, &colorHi, 1, HAL_MAX_DELAY);
-        HAL_SPI_Transmit(&hspi1, &colorLo, 1, HAL_MAX_DELAY);
+    
+    // 分块DMA传输
+    uint32_t remaining_pixels = pixelCount;
+    while(remaining_pixels > 0) {
+        uint32_t current_pixels = (remaining_pixels > pixels_per_buffer) ? pixels_per_buffer : remaining_pixels;
+        uint32_t bytes_to_send = current_pixels * 2;
+        
+        // 如果是最后一块且像素数不足，需要重新填充缓冲区
+        if(current_pixels < pixels_per_buffer) {
+            for(uint32_t i = 0; i < current_pixels; i++) {
+                dma_buffer[i * 2] = colorHi;
+                dma_buffer[i * 2 + 1] = colorLo;
+            }
+        }
+        
+        // 使用DMA传输
+        LCD_Writ_Bus_DMA(dma_buffer, bytes_to_send);
+        remaining_pixels -= current_pixels;
     }
+    
     LCD_CS_Set();
+
+// 【没有dma之前的填充函数的代码】
+// 	uint16_t color_buf[1] = {color};
+//     uint32_t num = (xend - xsta) * (yend - ysta);
+//     uint32_t chunk_size;
+//     uint8_t first_chunk = 1;
+// 	LCD_Address_Set(xsta, ysta, xend, yend); // 设置显示范围
+// 	// 准备颜色数据 (高位在前)
+//     uint8_t colorHi = color >> 8;
+//     uint8_t colorLo = color;
+// 	uint32_t pixelCount = (xend - xsta + 1) * (yend - ysta + 1);
+//     LCD_CS_Clr();
+// 	LCD_DC_Set();
+// //	while(num > 0)
+// //    {
+// //        chunk_size = (num > 65534) ? 65534 : num;
+// //        
+// //        // 配置DMA传输
+// ////        HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*)color_buf, chunk_size);
+// ////        
+// ////        // 等待DMA传输完成
+// ////        while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
+
+// //		LCD_WR_DATA_Bulk((uint16_t*)color_buf,chunk_size);
+// //        
+// //        num -= chunk_size;
+// //    }
+//     for(uint32_t i = 0; i < pixelCount*2; i++) {
+//         HAL_SPI_Transmit(&hspi1, &colorHi, 1, HAL_MAX_DELAY);
+//         HAL_SPI_Transmit(&hspi1, &colorLo, 1, HAL_MAX_DELAY);
+//     }
+// 	LCD_CS_Set();
 }
 
 void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
@@ -63,8 +105,8 @@ void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
     uint8_t colorHi = color >> 8;
     uint8_t colorLo = color & 0xFF;
 
-    // 静态缓冲区（分块传输）
-    uint8_t buffer[MAX_BUFFER_SIZE * 2];  // 每个像素2字节
+    // 静态缓冲区（分块DMA传输）
+    static uint8_t buffer[MAX_BUFFER_SIZE * 2];  // 每个像素2字节
     uint32_t pixelsPerBlock = MAX_BUFFER_SIZE / 2;
     uint32_t remaining = pixelCount;
 
@@ -80,8 +122,10 @@ void LCD_FillRect_FastStatic(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
             buffer[i * 2 + 1] = colorLo;
         }
 
-        // 发送当前块
-        HAL_SPI_Transmit(&hspi1, buffer, currentPixels * 2, HAL_MAX_DELAY);
+        // 发送当前块 【没有dma之前的代码】
+        // HAL_SPI_Transmit(&hspi1, buffer, currentPixels * 2, HAL_MAX_DELAY);
+        // 使用DMA发送当前块
+        LCD_Writ_Bus_DMA(buffer, currentPixels * 2);
         remaining -= currentPixels;
     }
 

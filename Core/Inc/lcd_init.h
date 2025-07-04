@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-#define USE_HORIZONTAL 0  //设置横屏或者竖屏显示 0或1为竖屏 2或3为横屏
+#define USE_HORIZONTAL 0  //锟斤拷锟矫猴拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷示 0锟斤拷1为锟斤拷锟斤拷 2锟斤拷3为锟斤拷锟斤拷
 
 
 #if USE_HORIZONTAL==0||USE_HORIZONTAL==1
@@ -15,7 +15,7 @@
 #define LCD_H 240
 #endif
 
-// 清屏按钮区域（方屏右下角）
+// 锟斤拷锟斤拷锟斤拷钮锟斤拷锟津（凤拷锟斤拷锟斤拷锟铰角ｏ拷
 #define CLEAR_BTN_X1 (LCD_WIDTH - 60)
 #define CLEAR_BTN_Y1 (LCD_HEIGHT - 40)
 #define CLEAR_BTN_X2 (LCD_WIDTH - 10)
@@ -23,7 +23,7 @@
 
 
 
-//-----------------LCD端口定义---------------- 
+//-----------------LCD锟剿口讹拷锟斤拷---------------- 
 
 #define LCD_RES_Clr()  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_RESET)  // RES
 #define LCD_RES_Set()  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET)
@@ -37,12 +37,16 @@
 #define LCD_BLK_Clr()  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET)  // BLK
 #define LCD_BLK_Set()  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET)
 
-void LCD_Writ_Bus(uint8_t dat);//模拟SPI时序
-void LCD_WR_DATA8(uint8_t dat);//写入一个字节
-void LCD_WR_DATA(uint16_t dat);//写入两个字节
-void LCD_WR_REG(uint8_t dat);//写入一个指令
-void LCD_Address_Set(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);//设置坐标函数
-void LCD_Init(void);//LCD初始化
+void LCD_Writ_Bus(uint8_t dat);//模锟斤拷SPI时锟斤拷(DMA鏂瑰紡)
+void LCD_Writ_Bus_DMA(uint8_t *pData, uint16_t Size);//DMA鎵归噺鏁版嵁浼犺緭
+void LCD_WR_DATA8(uint8_t dat);//写锟斤拷一锟斤拷锟街斤拷
+void LCD_WR_DATA(uint16_t dat);//写锟斤拷锟斤拷锟斤拷锟街斤拷
+void LCD_WR_REG(uint8_t dat);//写锟斤拷一锟斤拷指锟斤拷
+void LCD_Address_Set(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);//锟斤拷锟斤拷锟斤拷锟疥函锟斤拷
+void LCD_Init(void);//LCD锟斤拷始锟斤拷
+
+// DMA浼犺緭鐩稿叧
+extern volatile uint8_t spi_dma_tx_complete;
 #endif
 
 
