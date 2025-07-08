@@ -53,11 +53,12 @@ typedef struct {
 typedef struct {
     uint8_t breathing_led_enabled;
     uint8_t rgb_led_enabled;
+    uint16_t led_brightness;           // LED亮度 (0-100)
 } ControlState_t;
 
 // 全局变量
 volatile SensorData_t g_sensor_data = {0};
-volatile ControlState_t g_control_state = {0, 0}; // 默认都关闭
+volatile ControlState_t g_control_state = {0, 0, 50}; // 默认都关闭，亮度为50%
 
 // 按钮区域定义
 #define BTN_WIDTH 90
@@ -93,6 +94,9 @@ void StartLcdDisplayTask(void const * argument);
 void StartLvglTask(void const * argument);
 void StartESP32CommTask(void const * argument);  
 void StartUSART2RxTask(void const * argument);  
+
+// LED控制功能函数声明
+void Set_LED_Brightness(uint16_t brightness);
 
 // LCD显示功能函数声明
 void LCD_DrawUI(void);
@@ -264,10 +268,8 @@ void StartRgbLedTask(void const * argument)
   * @param argument: 任务参数
   * @retval None
   */
-void StartBreathingLedTask(void const * argument)
+void StartBreathingLedTaskTest(void const * argument)
 {
-  printf("PWM Breathing LED task started\r\n");
-  
   // 启动PWM
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   
@@ -299,6 +301,40 @@ void StartBreathingLedTask(void const * argument)
     
     // 延时控制呼吸频率
     osDelay(50);  // 50ms延时，可调节呼吸速度
+  }
+}
+
+void StartBreathingLedTask(void const * argument)
+{
+  // 启动PWM
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  
+  // 呼吸灯PWM参数
+  const uint32_t max_brightness = 200; // 最大亮度 (0-999)
+  const uint32_t min_brightness = 10;  // 最小亮度
+  
+  for(;;)
+  {
+    if(g_control_state.breathing_led_enabled) {
+      uint32_t pwm_value = 0;
+      
+      // 亮度换算：0-100 -> PWM值换算
+      if(g_control_state.led_brightness == 0) {
+        pwm_value = 0; // 完全关闭
+      } else {
+        // 线性插值换算：1-100 对应 min_brightness-max_brightness
+        pwm_value = min_brightness + 
+                   ((g_control_state.led_brightness * (max_brightness - min_brightness)) / 100);
+      }
+      
+      // 设置PWM占空比
+      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, pwm_value);
+      
+    } else {
+      // 关闭呼吸灯
+      __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 0);
+    }
+    osDelay(50); 
   }
 }
 
@@ -350,10 +386,10 @@ void StartSensorTask(void const * argument)
     g_sensor_data.vibration_detected = (vibration == GPIO_PIN_SET) ? 1 : 0;
     g_sensor_data.touch_detected = (touch == GPIO_PIN_SET) ? 1 : 0;
     
-    printf("传感器状态 - ADC: %.2fV  振动: %s  触摸: %s\r\n", 
-           voltage,
-           (vibration == GPIO_PIN_SET) ? "是" : "否",
-           (touch == GPIO_PIN_SET) ? "是" : "否");
+    // printf("传感器状态 - ADC: %.2fV  振动: %s  触摸: %s\r\n", 
+    //        voltage,
+    //        (vibration == GPIO_PIN_SET) ? "是" : "否",
+    //        (touch == GPIO_PIN_SET) ? "是" : "否");
     
     // 延时5秒
     osDelay(500);
@@ -419,8 +455,8 @@ void StartDHT11Task(void const * argument)
       g_sensor_data.temperature = dht11_data.temperature_int + dht11_data.temperature_dec / 10.0f;
       g_sensor_data.dht11_valid = 1;
       
-      printf("DHT11更新: 湿度=%.1f%% 温度=%.1f°C\r\n", 
-             g_sensor_data.humidity, g_sensor_data.temperature);
+      // printf("DHT11更新: 湿度=%.1f%% 温度=%.1f°C\r\n", 
+      //        g_sensor_data.humidity, g_sensor_data.temperature);
     } else {
       g_sensor_data.dht11_valid = 0;
       printf("DHT11读取失败\r\n");
@@ -789,6 +825,24 @@ void StartUSART2RxTask(void const * argument)
     }
     osDelay(500);
   }
+}
+
+/**
+  * @brief 设置LED亮度值
+  * @param brightness: 亮度值 (0-100)
+  * @retval None
+  */
+void Set_LED_Brightness(uint16_t brightness)
+{
+  // 限制亮度范围
+  if(brightness > 100) {
+    brightness = 100;
+  }
+  
+  // 更新全局控制状态
+  g_control_state.led_brightness = brightness;
+  
+  printf("LED亮度设置为: %u%%\r\n", brightness);
 }
 
 /* USER CODE END Application */

@@ -45,6 +45,11 @@ void LCD_WR_REG(uint8_t dat);//д��һ��ָ��
 void LCD_Address_Set(uint16_t x1,uint16_t y1,uint16_t x2,uint16_t y2);//�������꺯��
 void LCD_Init(void);//LCD��ʼ��
 
+// LCD显示控制函数
+void LCD_Display_Off(void);//LCD息屏
+void LCD_Display_On(void);//LCD亮屏
+void LCD_Display_On_Full_Init(void);//LCD亮屏（完全重新初始化版本）
+
 // DMA传输相关
 extern volatile uint8_t spi_dma_tx_complete;
 #endif

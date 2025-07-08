@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "control_state.h"
+#include "lcd_init.h"
 
 // ESP32通信相关变量
 static char esp32_tx_buffer[ESP32_TX_BUFFER_SIZE];
@@ -42,10 +44,7 @@ extern volatile struct {
     uint8_t dht11_valid;
 } g_sensor_data;
 
-extern volatile struct {
-    uint8_t breathing_led_enabled;
-    uint8_t rgb_led_enabled;
-} g_control_state;
+
 
 // USART2接收相关变量
 static uint8_t usart2_rx_byte = 0;
@@ -368,6 +367,39 @@ void ESP32_ProcessReceivedData(void)
                 printf("ESP32命令: 关闭RGB灯\r\n");
             }
         }
+        
+        // 查找LED亮度控制命令
+        if (strstr(json_buffer, "led_brightness")) {
+            char* brightness_pos = strstr(json_buffer, "led_brightness");
+            if (brightness_pos) {
+                // 查找冒号后的数值
+                char* colon_pos = strchr(brightness_pos, ':');
+                if (colon_pos) {
+                    // 跳过冒号和可能的空格
+                    colon_pos++;
+                    while (*colon_pos == ' ' || *colon_pos == '\t') {
+                        colon_pos++;
+                    }
+                    
+                    // 提取数值
+                    int brightness_value = atoi(colon_pos);
+                    
+                    // 处理不同的亮度值
+                    if (brightness_value == -1) {
+                        // -1表示不改变当前亮度，忽略此命令
+                        printf("ESP32命令: LED亮度保持不变 (忽略设置)\r\n");
+                    } else if (brightness_value >= 0 && brightness_value <= 100) {
+                        // 0-100范围内，设置亮度
+                        Set_LED_Brightness((uint16_t)brightness_value);
+                        printf("ESP32命令: 设置LED亮度为 %d%%\r\n", brightness_value);
+                    } else {
+                        // 超出有效范围的值
+                        printf("ESP32命令: LED亮度值超出范围 (有效值: -1=忽略, 0-100=设置): %d\r\n", brightness_value);
+                    }
+                }
+            }
+        }
+
     }
 }
 
@@ -390,7 +422,8 @@ void ESP32_BuildSensorJSON(char* json_buffer, uint16_t buffer_size)
         "},"
         "\"controls\":{"
             "\"breathing_led\":%s,"
-            "\"rgb_led\":%s"
+            "\"rgb_led\":%s,"
+            "\"led_brightness\":%u"
         "}"
         "}",
         HAL_GetTick(),
@@ -401,7 +434,8 @@ void ESP32_BuildSensorJSON(char* json_buffer, uint16_t buffer_size)
         g_sensor_data.humidity,
         g_sensor_data.dht11_valid ? "true" : "false",
         g_control_state.breathing_led_enabled ? "true" : "false",
-        g_control_state.rgb_led_enabled ? "true" : "false"
+        g_control_state.rgb_led_enabled ? "true" : "false",
+        g_control_state.led_brightness
     );
 }
 
@@ -416,12 +450,14 @@ void ESP32_BuildControlJSON(char* json_buffer, uint16_t buffer_size)
         "\"timestamp\":%lu,"
         "\"controls\":{"
             "\"breathing_led\":%s,"
-            "\"rgb_led\":%s"
+            "\"rgb_led\":%s,"
+            "\"led_brightness\":%u"
         "}"
         "}",
         HAL_GetTick(),
         g_control_state.breathing_led_enabled ? "true" : "false",
-        g_control_state.rgb_led_enabled ? "true" : "false"
+        g_control_state.rgb_led_enabled ? "true" : "false",
+        g_control_state.led_brightness
     );
 }
 
@@ -441,14 +477,16 @@ void ESP32_BuildPlayStatusJSON(char* json_buffer, uint16_t buffer_size, const ch
         "},"
         "\"controls\":{"
             "\"breathing_led\":%s,"
-            "\"rgb_led\":%s"
+            "\"rgb_led\":%s,"
+            "\"led_brightness\":%u"
         "}"
         "}",
         HAL_GetTick(),
         play_status,
         content_type,
         g_control_state.breathing_led_enabled ? "true" : "false",
-        g_control_state.rgb_led_enabled ? "true" : "false"
+        g_control_state.rgb_led_enabled ? "true" : "false",
+        g_control_state.led_brightness
     );
 }
 
@@ -546,38 +584,106 @@ void USART2_ProcessHexCommand(uint8_t cmd)
         // B系列命令（屏幕和音频控制）
         case CMD_SCREEN_OFF:
             printf("执行: 关闭屏幕\r\n");
+            LCD_Display_Off();  // 调用LCD息屏函数
             break;
             
         case CMD_SCREEN_ON:
             printf("执行: 亮屏\r\n");
+            LCD_Display_On();   // 调用LCD亮屏函数
+            // LCD_Display_On_Full_Init();   // 使用完全重新初始化版本
             break;
             
         case CMD_LIGHT_UP:
             printf("执行: 夜灯调亮\r\n");
+            {
+                // 获取当前亮度
+                uint16_t current_brightness = g_control_state.led_brightness;
+                uint16_t new_brightness = current_brightness + 20;
+                
+                // 确保不超过最大值100
+                if (new_brightness > 100) {
+                    new_brightness = 100;
+                }
+                
+                // 设置新亮度
+                Set_LED_Brightness(new_brightness);
+                printf("LED亮度调节: %u%% -> %u%%\r\n", current_brightness, new_brightness);
+                
+                // 发送状态到ESP32
+                char json_buffer5[256];
+                ESP32_BuildPlayStatusJSON(json_buffer5, sizeof(json_buffer5), "light_up", "brightness_control");
+                ESP32_SendJSON(json_buffer5);
+            }
             break;
             
         case CMD_LIGHT_DOWN:
             printf("执行: 夜灯调暗\r\n");
+            {
+                // 获取当前亮度
+                uint16_t current_brightness = g_control_state.led_brightness;
+                uint16_t new_brightness;
+                
+                // 确保不低于最小值0，注意防止无符号整数下溢
+                if (current_brightness >= 20) {
+                    new_brightness = current_brightness - 20;
+                } else {
+                    new_brightness = 0;
+                }
+                
+                // 设置新亮度
+                Set_LED_Brightness(new_brightness);
+                printf("LED亮度调节: %u%% -> %u%%\r\n", current_brightness, new_brightness);
+                
+                // 发送状态到ESP32
+                char json_buffer6[256];
+                ESP32_BuildPlayStatusJSON(json_buffer6, sizeof(json_buffer6), "light_down", "brightness_control");
+                ESP32_SendJSON(json_buffer6);
+            }
             break;
             
         case CMD_MUTE:
             printf("执行: 静音\r\n");
+            {
+                char json_buffer7[256];
+                ESP32_BuildPlayStatusJSON(json_buffer7, sizeof(json_buffer7), "mute", "volume_control");
+                ESP32_SendJSON(json_buffer7);
+            }
             break;
             
         case CMD_UNMUTE:
             printf("执行: 取消静音\r\n");
+            {
+                char json_buffer8[256];
+                ESP32_BuildPlayStatusJSON(json_buffer8, sizeof(json_buffer8), "unmute", "volume_control");
+                ESP32_SendJSON(json_buffer8);
+            }
             break;
             
         case CMD_VOL_UP:
             printf("执行: 声音调大\r\n");
+            {
+                char json_buffer9[256];
+                ESP32_BuildPlayStatusJSON(json_buffer9, sizeof(json_buffer9), "vol_up", "volume_control");
+                ESP32_SendJSON(json_buffer9);
+            }
             break;
             
         case CMD_VOL_DOWN:
             printf("执行: 声音调小\r\n");
+            {
+                char json_buffer10[256];
+                ESP32_BuildPlayStatusJSON(json_buffer10, sizeof(json_buffer10), "vol_down", "volume_control");
+                ESP32_SendJSON(json_buffer10);
+            }
             break;
             
         case CMD_VOL_MAX:
             printf("执行: 声音调到最大\r\n");
+            {
+                char json_buffer11[256];
+                ESP32_BuildPlayStatusJSON(json_buffer11, sizeof(json_buffer11), "vol_max", "volume_control");
+                ESP32_SendJSON(json_buffer11);
+            }
             break;
             
         // C系列命令（时间和记录控制）
@@ -686,7 +792,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     else if (huart->Instance == USART3) {
         // ESP32数据接收处理
         char received_char = esp32_rx_buffer[esp32_rx_index];
-        if (received_char == '\n' || received_char == '\r') {
+        if (received_char == '\a') {
             // 接收完成
             esp32_rx_buffer[esp32_rx_index] = '\0';
             esp32_data_ready = true;
